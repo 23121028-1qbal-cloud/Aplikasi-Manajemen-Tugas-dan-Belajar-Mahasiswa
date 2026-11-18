@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\User;
 use Illuminate\Support\Str;
 
 class TemporaryPasswordService
@@ -18,5 +19,18 @@ class TemporaryPasswordService
     public function isAcceptable(string $password): bool
     {
         return mb_strlen($password) >= 8;
+    }
+
+    /**
+     * Terbitkan password baru untuk akun yang sudah ada.
+     * Nilai plaintext dikembalikan sekali untuk ditampilkan Admin.
+     */
+    public function resetFor(User $user): string
+    {
+        $temporaryPassword = $this->generate();
+
+        $user->update(['password' => $temporaryPassword]);
+
+        return $temporaryPassword;
     }
 }

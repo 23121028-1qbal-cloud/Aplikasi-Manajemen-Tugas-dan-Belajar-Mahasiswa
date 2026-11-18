@@ -38,13 +38,4 @@ class LecturerAccountService
             ];
         });
     }
-
-    public function resetTemporaryPassword(User $user): string
-    {
-        $temporaryPassword = $this->temporaryPasswords->generate();
-
-        $user->update(['password' => $temporaryPassword]);
-
-        return $temporaryPassword;
-    }
 }

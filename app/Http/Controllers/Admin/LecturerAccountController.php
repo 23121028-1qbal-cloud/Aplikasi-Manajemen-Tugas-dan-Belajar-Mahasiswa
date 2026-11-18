@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreLecturerRequest;
 use App\Models\GuruDosen;
 use App\Services\LecturerAccountService;
+use App\Services\TemporaryPasswordService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
@@ -34,9 +35,9 @@ class LecturerAccountController extends Controller
             ]);
     }
 
-    public function resetTemporaryPassword(GuruDosen $lecturer, LecturerAccountService $service): RedirectResponse
+    public function resetTemporaryPassword(GuruDosen $lecturer, TemporaryPasswordService $temporaryPasswords): RedirectResponse
     {
-        $temporaryPassword = $service->resetTemporaryPassword($lecturer->user);
+        $temporaryPassword = $temporaryPasswords->resetFor($lecturer->user);
 
         return redirect()
             ->route('admin.lecturers.index')

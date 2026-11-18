@@ -200,3 +200,11 @@ Audit UI/UX terhadap dokumen route menemukan halaman tanpa route dan route tanpa
 | REC-11 | Field akun yang boleh diubah Admin belum ditetapkan | Tunggu `PRD-TBD-023`; validasi Form Request tidak boleh menerima `role`, `password`, atau `id` |
 
 Aturan keamanan tidak berubah: seluruh route di atas tetap memerlukan session, CSRF pada mutasi, policy resource, dan scoping query di server.
+
+Route berikut **sengaja belum diimplementasikan** karena keputusan yang menjadi prasyaratnya belum ada:
+
+| Route | Alasan |
+|---|---|
+| `PUT /guru-dosen/courses/{course}` (`lecturer.courses.update`) | Field mata kuliah yang boleh diubah dosen dan kewenangan reassignment belum ditetapkan |
+| `PUT /admin/enrollments/{enrollment}` (`admin.enrollments.update`) | Transisi status enrollment bergantung pada REC-04/PRD-TBD-022 |
+| `PUT /admin/students/{student}` (`admin.students.update`) | Daftar field akun yang boleh diubah Admin (REC-11/PRD-TBD-023) belum ditetapkan |
