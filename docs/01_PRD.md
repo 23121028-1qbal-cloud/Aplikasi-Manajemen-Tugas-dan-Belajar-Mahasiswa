@@ -3,7 +3,7 @@
 | Metadata | Nilai |
 |---|---|
 | Document ID | DOC-01 |
-| Version | 1.3.0 |
+| Version | 1.4.0 |
 | Status | Draft Baseline — Web Migration |
 | Platform | Web Application |
 | Product | Aplikasi Manajemen Tugas dan Belajar Mahasiswa |
@@ -156,6 +156,7 @@ Keputusan 2026-11-18 (`USER-DECIDED`, `PRD-TBD-016`): temporary password berlaku
 - Arsip mata kuliah tidak menghapus tugas/progress.
 
 Keputusan 2026-11-18:
+- Dosen pengampu dapat mengubah **nama** mata kuliah yang diampu; kode mata kuliah dan penugasan dosen tetap kewenangan Admin. Perubahan memakai guard `row_version`.
 - Enrollment yang dibuat Admin selalu berstatus `Terdaftar`. Admin dapat mengubah `Terdaftar` → `Dibatalkan` atau `Terdaftar` → `Selesai`. `Selesai`/`Dibatalkan` dapat diaktifkan kembali menjadi `Terdaftar` melalui aksi enrollment periode yang sama. `Ditolak` hanya berlaku untuk alur pengajuan mahasiswa yang tidak termasuk MVP sehingga tidak ditawarkan di UI. Lihat REC-04/`PRD-TBD-022`.
 - `tanggal_daftar` tidak ditimpa saat reaktivasi; waktu reaktivasi tercatat pada `updated_at`. Lihat REC-05.
 - Field akun yang boleh diubah Admin: `nama_lengkap` saja. `username`, `npm`, dan `nip_guru` tidak dapat diubah pada MVP karena menjadi identifier login dan riwayat. Status akun diatur lewat aksi terpisah. Lihat REC-11/`PRD-TBD-023`.

@@ -19,6 +19,7 @@ class MataKuliahFactory extends Factory
             'guru_dosen_id' => GuruDosen::factory(),
             'is_archived' => false,
             'tanggal_arsip' => null,
+            'row_version' => 1,
         ];
     }
 

@@ -5,6 +5,14 @@
     @csrf
     @if ($editing)
         @method('PUT')
+        <input type="hidden" name="row_version" value="{{ old('row_version', $task->row_version) }}">
+    @endif
+
+    @if ($errors->has('row_version'))
+        <div class="alert alert-warning" role="alert">
+            {{ $errors->first('row_version') }}
+            <a href="{{ route('mahasiswa.tasks.personal.edit', $task) }}" class="alert-link">Muat versi terbaru</a>.
+        </div>
     @endif
 
     <div class="mb-3">

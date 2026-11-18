@@ -59,6 +59,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/guru-dosen/dashboard', [DashboardController::class, 'show'])->name('lecturer.dashboard');
         Route::get('/guru-dosen/courses', [LecturerCourseController::class, 'index'])->name('lecturer.courses.index');
         Route::get('/guru-dosen/courses/{course}', [LecturerCourseController::class, 'show'])->name('lecturer.courses.show');
+        Route::put('/guru-dosen/courses/{course}', [LecturerCourseController::class, 'update'])->name('lecturer.courses.update');
     });
 
     Route::middleware('role:admin')->group(function () {

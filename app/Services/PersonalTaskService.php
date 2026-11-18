@@ -6,6 +6,8 @@ use App\Enums\TaskType;
 use App\Models\Mahasiswa;
 use App\Models\Tugas;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class PersonalTaskService
 {
@@ -30,11 +32,30 @@ class PersonalTaskService
         ]);
     }
 
+    /**
+     * @throws ValidationException
+     */
     public function update(Tugas $task, array $data): Tugas
     {
-        $task->update(Arr::only($data, self::EDITABLE));
+        return DB::transaction(function () use ($task, $data) {
+            $locked = Tugas::query()
+                ->whereKey($task->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        return $task->fresh();
+            if ($locked->row_version !== (int) $data['row_version']) {
+                throw ValidationException::withMessages([
+                    'row_version' => 'Data telah diubah pada sesi lain. Muat ulang halaman sebelum menyimpan kembali.',
+                ]);
+            }
+
+            $locked->forceFill([
+                ...Arr::only($data, self::EDITABLE),
+                'row_version' => $locked->row_version + 1,
+            ])->save();
+
+            return $locked->fresh();
+        });
     }
 
     public function archive(Tugas $task): Tugas

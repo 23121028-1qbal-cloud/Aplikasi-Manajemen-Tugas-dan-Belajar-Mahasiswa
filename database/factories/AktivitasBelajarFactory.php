@@ -25,6 +25,7 @@ class AktivitasBelajarFactory extends Factory
             'tanggal_dibuat' => now()->toDateString(),
             'is_archived' => false,
             'tanggal_arsip' => null,
+            'row_version' => 1,
         ];
     }
 

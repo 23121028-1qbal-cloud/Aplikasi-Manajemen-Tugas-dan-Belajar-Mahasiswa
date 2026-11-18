@@ -3,7 +3,7 @@
 | Metadata | Value |
 |---|---|
 | Document ID | DOC-08 |
-| Version | 1.3.0 |
+| Version | 1.4.0 |
 | Status | Draft |
 | Primary interface | Laravel Web Routes |
 | JSON API | Only when a specific UI/integration need exists |
@@ -209,4 +209,4 @@ Status route:
 | `PUT /admin/students/{student}` (`admin.students.update`) | Diimplementasikan; body hanya `nama_lengkap` |
 | `PUT /admin/lecturers/{lecturer}` (`admin.lecturers.update`) | Diimplementasikan; body hanya `nama_lengkap` |
 | `PUT /admin/enrollments/{enrollment}` (`admin.enrollments.update`) | Diimplementasikan; body hanya `status` dengan guard transisi REC-04 |
-| `PUT /guru-dosen/courses/{course}` (`lecturer.courses.update`) | **Belum diimplementasikan**; field mata kuliah yang boleh diubah dosen dan kewenangan reassignment belum ditetapkan |
+| `PUT /guru-dosen/courses/{course}` (`lecturer.courses.update`) | Diimplementasikan; body hanya `nama_mata_kuliah` + `row_version`. Kode dan dosen pengampu tetap kewenangan Admin |

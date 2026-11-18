@@ -28,6 +28,7 @@ class MataKuliah extends Model
         return [
             'is_archived' => 'boolean',
             'tanggal_arsip' => 'datetime',
+            'row_version' => 'integer',
         ];
     }
 

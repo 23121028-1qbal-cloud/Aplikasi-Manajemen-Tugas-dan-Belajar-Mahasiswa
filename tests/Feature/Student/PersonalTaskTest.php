@@ -83,7 +83,7 @@ class PersonalTaskTest extends TestCase
             ->assertNotFound();
 
         $this->actingAs($other->user)
-            ->put(route('mahasiswa.tasks.personal.update', $task), $this->payload())
+            ->put(route('mahasiswa.tasks.personal.update', $task), $this->payload(['row_version' => $task->row_version]))
             ->assertNotFound();
 
         $this->actingAs($other->user)
@@ -91,6 +91,46 @@ class PersonalTaskTest extends TestCase
             ->assertNotFound();
 
         $this->assertFalse($task->fresh()->is_archived);
+    }
+
+    public function test_task_edit_with_stale_version_is_rejected(): void
+    {
+        $student = $this->student();
+        $task = Tugas::factory()->create([
+            'id_mahasiswa_pemilik' => $student->id_mahasiswa,
+            'judul_tugas' => 'Judul Awal',
+        ]);
+        $staleVersion = $task->row_version;
+
+        $task->forceFill([
+            'judul_tugas' => 'Diubah Sesi Lain',
+            'row_version' => $staleVersion + 1,
+        ])->save();
+
+        $this->actingAs($student->user)
+            ->put(route('mahasiswa.tasks.personal.update', $task), $this->payload([
+                'judul_tugas' => 'Edit Saya',
+                'row_version' => $staleVersion,
+            ]))
+            ->assertSessionHasErrors('row_version');
+
+        $this->assertSame('Diubah Sesi Lain', $task->fresh()->judul_tugas);
+    }
+
+    public function test_successful_task_edit_increments_row_version(): void
+    {
+        $student = $this->student();
+        $task = Tugas::factory()->create(['id_mahasiswa_pemilik' => $student->id_mahasiswa]);
+
+        $this->actingAs($student->user)
+            ->put(route('mahasiswa.tasks.personal.update', $task), $this->payload([
+                'judul_tugas' => 'Judul Baru',
+                'row_version' => $task->row_version,
+            ]))
+            ->assertRedirect(route('mahasiswa.tasks.personal.show', $task));
+
+        $this->assertSame('Judul Baru', $task->fresh()->judul_tugas);
+        $this->assertSame($task->row_version + 1, $task->fresh()->row_version);
     }
 
     public function test_archive_removes_task_from_active_list_and_keeps_history(): void

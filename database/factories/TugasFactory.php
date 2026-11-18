@@ -31,6 +31,7 @@ class TugasFactory extends Factory
             'is_closed' => false,
             'is_archived' => false,
             'tanggal_arsip' => null,
+            'row_version' => 1,
         ];
     }
 

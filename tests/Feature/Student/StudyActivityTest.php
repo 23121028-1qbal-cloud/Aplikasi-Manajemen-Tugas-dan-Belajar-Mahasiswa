@@ -76,12 +76,36 @@ class StudyActivityTest extends TestCase
             ->assertNotFound();
 
         $this->actingAs($other->user)
-            ->put(route('mahasiswa.study-activities.update', $activity), $this->payload())
+            ->put(route('mahasiswa.study-activities.update', $activity), $this->payload(['row_version' => $activity->row_version]))
             ->assertNotFound();
 
         $this->actingAs($other->user)
             ->patch(route('mahasiswa.study-activities.archive', $activity))
             ->assertNotFound();
+    }
+
+    public function test_study_activity_edit_with_stale_version_is_rejected(): void
+    {
+        $student = $this->student();
+        $activity = AktivitasBelajar::factory()->create([
+            'id_mahasiswa' => $student->id_mahasiswa,
+            'judul_aktivitas' => 'Judul Awal',
+        ]);
+        $staleVersion = $activity->row_version;
+
+        $activity->forceFill([
+            'judul_aktivitas' => 'Diubah Sesi Lain',
+            'row_version' => $staleVersion + 1,
+        ])->save();
+
+        $this->actingAs($student->user)
+            ->put(route('mahasiswa.study-activities.update', $activity), $this->payload([
+                'judul_aktivitas' => 'Edit Saya',
+                'row_version' => $staleVersion,
+            ]))
+            ->assertSessionHasErrors('row_version');
+
+        $this->assertSame('Diubah Sesi Lain', $activity->fresh()->judul_aktivitas);
     }
 
     public function test_archived_activity_moves_to_history(): void

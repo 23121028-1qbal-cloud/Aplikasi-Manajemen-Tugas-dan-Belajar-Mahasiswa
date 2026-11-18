@@ -25,6 +25,7 @@ class UpdateCourseRequest extends FormRequest
             ],
             'nama_mata_kuliah' => ['required', 'string', 'max:100'],
             'guru_dosen_id' => ['required', 'integer', 'exists:guru_dosen,id_guru_dosen'],
+            'row_version' => ['required', 'integer', 'min:1'],
         ];
     }
 }

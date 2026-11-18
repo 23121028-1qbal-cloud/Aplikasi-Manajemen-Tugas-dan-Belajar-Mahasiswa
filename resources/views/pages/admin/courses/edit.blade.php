@@ -21,6 +21,14 @@
         <form method="POST" action="{{ route('admin.courses.update', $course) }}">
             @csrf
             @method('PUT')
+            <input type="hidden" name="row_version" value="{{ old('row_version', $course->row_version) }}">
+
+            @if ($errors->has('row_version'))
+                <div class="alert alert-warning" role="alert">
+                    {{ $errors->first('row_version') }}
+                    <a href="{{ route('admin.courses.edit', $course) }}" class="alert-link">Muat versi terbaru</a>.
+                </div>
+            @endif
 
             <div class="mb-3">
                 <label for="kode_mata_kuliah" class="form-label">Kode Mata Kuliah</label>

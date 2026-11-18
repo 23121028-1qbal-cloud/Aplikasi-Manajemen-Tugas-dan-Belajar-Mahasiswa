@@ -36,6 +36,7 @@ class AktivitasBelajar extends Model
             'durasi_menit' => 'integer',
             'is_archived' => 'boolean',
             'tanggal_arsip' => 'datetime',
+            'row_version' => 'integer',
         ];
     }
 

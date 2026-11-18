@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\StoreCourseRequest;
 use App\Http\Requests\Admin\UpdateCourseRequest;
 use App\Models\GuruDosen;
 use App\Models\MataKuliah;
+use App\Services\CourseService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
@@ -41,9 +42,9 @@ class CourseController extends Controller
         ]);
     }
 
-    public function update(UpdateCourseRequest $request, MataKuliah $course): RedirectResponse
+    public function update(UpdateCourseRequest $request, MataKuliah $course, CourseService $service): RedirectResponse
     {
-        $course->update($request->validated());
+        $service->update($course, $request->validated());
 
         return redirect()
             ->route('admin.courses.index')

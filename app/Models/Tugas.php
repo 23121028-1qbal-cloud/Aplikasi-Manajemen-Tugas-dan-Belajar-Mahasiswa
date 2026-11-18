@@ -40,6 +40,7 @@ class Tugas extends Model
             'is_closed' => 'boolean',
             'is_archived' => 'boolean',
             'tanggal_arsip' => 'datetime',
+            'row_version' => 'integer',
         ];
     }
 

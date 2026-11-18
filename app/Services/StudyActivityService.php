@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Models\AktivitasBelajar;
 use App\Models\Mahasiswa;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class StudyActivityService
 {
@@ -27,11 +29,30 @@ class StudyActivityService
         ]);
     }
 
+    /**
+     * @throws ValidationException
+     */
     public function update(AktivitasBelajar $activity, array $data): AktivitasBelajar
     {
-        $activity->update(Arr::only($data, self::EDITABLE));
+        return DB::transaction(function () use ($activity, $data) {
+            $locked = AktivitasBelajar::query()
+                ->whereKey($activity->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        return $activity->fresh();
+            if ($locked->row_version !== (int) $data['row_version']) {
+                throw ValidationException::withMessages([
+                    'row_version' => 'Data telah diubah pada sesi lain. Muat ulang halaman sebelum menyimpan kembali.',
+                ]);
+            }
+
+            $locked->forceFill([
+                ...Arr::only($data, self::EDITABLE),
+                'row_version' => $locked->row_version + 1,
+            ])->save();
+
+            return $locked->fresh();
+        });
     }
 
     public function archive(AktivitasBelajar $activity): AktivitasBelajar

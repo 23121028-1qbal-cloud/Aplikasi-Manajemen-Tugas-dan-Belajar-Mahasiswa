@@ -31,6 +31,42 @@
     </div>
 
     <div class="app-card p-4 mt-3">
+        <h3 class="h6">Ubah Nama Mata Kuliah</h3>
+        <p class="small text-body-secondary">
+            Kode mata kuliah dan dosen pengampu hanya dapat diubah oleh Admin.
+        </p>
+
+        <form method="POST" action="{{ route('lecturer.courses.update', $course) }}" style="max-width: 520px;">
+            @csrf
+            @method('PUT')
+            <input type="hidden" name="row_version" value="{{ old('row_version', $course->row_version) }}">
+
+            @if ($errors->has('row_version'))
+                <div class="alert alert-warning" role="alert">
+                    {{ $errors->first('row_version') }}
+                    <a href="{{ route('lecturer.courses.show', $course) }}" class="alert-link">Muat versi terbaru</a>.
+                </div>
+            @endif
+
+            <div class="mb-3">
+                <label for="nama_mata_kuliah" class="form-label">Nama Mata Kuliah</label>
+                <input type="text"
+                       id="nama_mata_kuliah"
+                       name="nama_mata_kuliah"
+                       value="{{ old('nama_mata_kuliah', $course->nama_mata_kuliah) }}"
+                       class="form-control @error('nama_mata_kuliah') is-invalid @enderror"
+                       maxlength="100"
+                       required>
+                @error('nama_mata_kuliah')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <button type="submit" class="btn btn-sm btn-primary">Simpan Nama</button>
+        </form>
+    </div>
+
+    <div class="app-card p-4 mt-3">
         <h3 class="h6">Tugas Akademik</h3>
         <p class="small text-body-secondary mb-0">
             Daftar dan pembuatan tugas akademik tersedia pada Phase 6.

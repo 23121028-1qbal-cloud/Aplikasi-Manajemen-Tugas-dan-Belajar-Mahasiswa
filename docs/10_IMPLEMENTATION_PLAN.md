@@ -3,7 +3,7 @@
 | Metadata | Value |
 |---|---|
 | Document ID | DOC-10 |
-| Version | 1.3.0 |
+| Version | 1.4.0 |
 | Status | Draft |
 | Strategy | Incremental Laravel Full-Stack delivery |
 
@@ -271,6 +271,7 @@ MVP release requires:
 | 2026-11-18 | Phase 1 — rekonsiliasi | Seluruh REC-01 s.d. REC-15 dan PRD-TBD-016/022/023/024 disetujui (`USER-DECIDED`). | Disetujui |
 | 2026-11-18 | Phase 3 — auth | Registrasi mahasiswa, login/logout session, rate limit login, cek akun aktif, middleware role, perubahan password, bootstrap admin via Artisan, provisioning dosen + temporary password sekali tampil. 32 test lulus (110 assertion). | Baseline lulus, menunggu review |
 | 2026-11-18 | Phase 4 — master data | Mata kuliah (CRUD, arsip, penugasan dosen), enrollment (create/reactivate/status transition, unique periode), akun mahasiswa dan dosen oleh Admin (daftar, detail, nama, status, temporary password), daftar mata kuliah untuk dosen dan mahasiswa. | Selesai |
+| 2026-11-18 | Konflik edit & mata kuliah dosen | `row_version` pada tugas, aktivitas belajar, dan mata kuliah; dosen dapat mengubah nama mata kuliah yang diampu; konflik ditolak dengan pesan dan input lama dipertahankan. | Selesai |
 | 2026-11-18 | Phase 5 — tugas personal & belajar | Tugas personal CRUD/arsip/riwayat, aktivitas belajar CRUD/arsip/riwayat, filter dan pagination, scoping kepemilikan, modal konfirmasi arsip. 74 test lulus (275 assertion). | Baseline lulus, menunggu review |
 | 2026-11-18 | Phase 2 — foundation | Laravel 12.73.0 (PHP 8.4.24) + Bootstrap 5.3.9 + Bootstrap Icons 1.13.2 via Vite; layout guest/app dengan sidebar + offcanvas; token light/dark; 4 test baseline lulus. Versi berstatus `PROPOSED` (REC-15). | Baseline lulus, menunggu review |
 

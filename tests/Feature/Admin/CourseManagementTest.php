@@ -62,12 +62,14 @@ class CourseManagementTest extends TestCase
             'kode_mata_kuliah' => $course->kode_mata_kuliah,
             'nama_mata_kuliah' => 'Nama Baru',
             'guru_dosen_id' => $newLecturer->id_guru_dosen,
+            'row_version' => $course->row_version,
         ])->assertRedirect(route('admin.courses.index'));
 
         $course->refresh();
 
         $this->assertSame('Nama Baru', $course->nama_mata_kuliah);
         $this->assertSame($newLecturer->id_guru_dosen, $course->guru_dosen_id);
+        $this->assertSame(2, $course->row_version);
     }
 
     public function test_admin_can_archive_course_without_deleting_history(): void
@@ -85,6 +87,69 @@ class CourseManagementTest extends TestCase
             'id_mahasiswa_mata_kuliah' => $enrollment->id_mahasiswa_mata_kuliah,
             'status' => EnrollmentStatus::Terdaftar->value,
         ]);
+    }
+
+    public function test_admin_edit_with_stale_version_is_rejected(): void
+    {
+        $course = MataKuliah::factory()->create(['nama_mata_kuliah' => 'Nama Awal']);
+        $lecturer = GuruDosen::factory()->create();
+        $staleVersion = $course->row_version;
+
+        $course->forceFill([
+            'nama_mata_kuliah' => 'Diubah Sesi Lain',
+            'row_version' => $staleVersion + 1,
+        ])->save();
+
+        $this->actingAs($this->admin())->put(route('admin.courses.update', $course), [
+            'kode_mata_kuliah' => $course->kode_mata_kuliah,
+            'nama_mata_kuliah' => 'Edit Saya',
+            'guru_dosen_id' => $lecturer->id_guru_dosen,
+            'row_version' => $staleVersion,
+        ])->assertSessionHasErrors('row_version');
+
+        $this->assertSame('Diubah Sesi Lain', $course->fresh()->nama_mata_kuliah);
+    }
+
+    public function test_lecturer_can_update_only_name_of_assigned_course(): void
+    {
+        $lecturer = GuruDosen::factory()->create();
+        $course = MataKuliah::factory()->create([
+            'guru_dosen_id' => $lecturer->id_guru_dosen,
+            'nama_mata_kuliah' => 'Nama Awal',
+            'kode_mata_kuliah' => 'IF101',
+        ]);
+        $otherLecturer = GuruDosen::factory()->create();
+
+        $this->actingAs($lecturer->user)
+            ->put(route('lecturer.courses.update', $course), [
+                'nama_mata_kuliah' => 'Nama Baru',
+                'kode_mata_kuliah' => 'DIUBAH',
+                'guru_dosen_id' => $otherLecturer->id_guru_dosen,
+                'row_version' => $course->row_version,
+            ])
+            ->assertRedirect(route('lecturer.courses.show', $course));
+
+        $course->refresh();
+
+        $this->assertSame('Nama Baru', $course->nama_mata_kuliah);
+        $this->assertSame('IF101', $course->kode_mata_kuliah);
+        $this->assertSame($lecturer->id_guru_dosen, $course->guru_dosen_id);
+        $this->assertSame(2, $course->row_version);
+    }
+
+    public function test_lecturer_cannot_update_unassigned_course(): void
+    {
+        $lecturer = GuruDosen::factory()->create();
+        $otherCourse = MataKuliah::factory()->create(['nama_mata_kuliah' => 'Bukan Miliknya']);
+
+        $this->actingAs($lecturer->user)
+            ->put(route('lecturer.courses.update', $otherCourse), [
+                'nama_mata_kuliah' => 'Coba Ubah',
+                'row_version' => $otherCourse->row_version,
+            ])
+            ->assertNotFound();
+
+        $this->assertSame('Bukan Miliknya', $otherCourse->fresh()->nama_mata_kuliah);
     }
 
     public function test_non_admin_cannot_manage_courses(): void
