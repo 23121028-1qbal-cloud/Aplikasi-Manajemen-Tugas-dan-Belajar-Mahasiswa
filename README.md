@@ -14,7 +14,7 @@ Dokumentasi baseline proyek **Web Application** berbasis Laravel Full-Stack.
 - Notifikasi: notifikasi dalam aplikasi web dan Laravel Scheduler.
 - Deployment target: satu VM Oracle Cloud Infrastructure (OCI) untuk Nginx, Laravel, dan MySQL.
 
-Dokumen ini merupakan **Draft Baseline v1.4.0**. Keputusan migrasi platform dan seluruh rekonsiliasi REC-01 s.d. REC-15 telah disetujui pada 2026-11-18, termasuk REC-04, REC-11, dan `PRD-TBD-016`. Beberapa rincian produk, database, keamanan, dan operasional tetap ditandai `TBD` atau `OPEN`. Status tersebut tidak boleh dianggap sebagai persetujuan otomatis.
+Dokumen ini merupakan **Draft Baseline v1.5.0**. Keputusan migrasi platform dan seluruh rekonsiliasi REC-01 s.d. REC-15 telah disetujui pada 2026-11-18, termasuk REC-04, REC-11, dan `PRD-TBD-016`. Beberapa rincian produk, database, keamanan, dan operasional tetap ditandai `TBD` atau `OPEN`. Status tersebut tidak boleh dianggap sebagai persetujuan otomatis.
 
 ## Struktur dokumentasi
 
@@ -100,5 +100,6 @@ Audit repository menemukan konflik dan celah dokumentasi. Rekonsiliasi `REC-01` 
 | 1.2.0 | 2026-11-18 | Draft + keputusan | Menyetujui REC-01/02/03/05/06/07/08/09/10/12/13/14/15 dan PRD-TBD-024. REC-04, REC-11, dan PRD-TBD-016 tetap OPEN. |
 | 1.3.0 | 2026-11-18 | Draft + keputusan | Menyetujui REC-04 (transisi enrollment), REC-11 (`nama_lengkap` saja), dan PRD-TBD-016 (temporary password 72 jam + wajib ganti). |
 | 1.4.0 | 2026-11-18 | Draft + keputusan | Menambahkan optimistic locking `row_version` pada tugas, aktivitas belajar, dan mata kuliah, serta kewenangan dosen mengubah nama mata kuliah yang diampu. |
+| 1.5.0 | 2026-11-19 | Implementasi Phase 6 | Menambahkan tugas akademik, distribusi progres idempotent, pembaruan progres mahasiswa, koreksi dosen, monitoring Admin read-only, dan `row_version` pada progres akademik. |
 
 Dokumen-dokumen ini belum merupakan bukti bahwa aplikasi telah diimplementasikan atau dideploy.

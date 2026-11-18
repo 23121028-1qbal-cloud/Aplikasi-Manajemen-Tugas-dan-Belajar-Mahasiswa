@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Tugas extends Model
 {
@@ -54,6 +55,16 @@ class Tugas extends Model
         return $query->where('is_archived', false);
     }
 
+    public function scopeAcademic(Builder $query): Builder
+    {
+        return $query->where('task_type', TaskType::Academic->value);
+    }
+
+    public function scopeOpen(Builder $query): Builder
+    {
+        return $query->where('is_closed', false)->where('is_archived', false);
+    }
+
     public function mahasiswa(): BelongsTo
     {
         return $this->belongsTo(Mahasiswa::class, 'id_mahasiswa_pemilik', 'id_mahasiswa');
@@ -82,6 +93,11 @@ class Tugas extends Model
     public function guruDosenPembuat(): BelongsTo
     {
         return $this->belongsTo(GuruDosen::class, 'id_pembuat_guru_dosen', 'id_guru_dosen');
+    }
+
+    public function progres(): HasMany
+    {
+        return $this->hasMany(ProgresTugasAkademik::class, 'id_tugas', 'id_tugas');
     }
 
     public function isCompleted(): bool

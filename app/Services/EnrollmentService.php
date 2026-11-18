@@ -11,6 +11,8 @@ use Illuminate\Validation\ValidationException;
 
 class EnrollmentService
 {
+    public function __construct(private readonly AcademicTaskService $academicTasks) {}
+
     /**
      * Membuat enrollment baru atau mengaktifkan kembali baris periode yang sama.
      * `tanggal_daftar` tidak ditimpa pada reaktivasi (REC-05).
@@ -56,8 +58,11 @@ class EnrollmentService
 
                 $existing->update(['status' => EnrollmentStatus::Terdaftar]);
 
+                $fresh = $existing->fresh();
+                $this->academicTasks->distributeForEnrollment($fresh);
+
                 return [
-                    'enrollment' => $existing->fresh(),
+                    'enrollment' => $fresh,
                     'reactivated' => true,
                 ];
             }
@@ -77,6 +82,8 @@ class EnrollmentService
                     'id_mata_kuliah' => 'Enrollment untuk periode ini sudah ada.',
                 ]);
             }
+
+            $this->academicTasks->distributeForEnrollment($enrollment);
 
             return [
                 'enrollment' => $enrollment,

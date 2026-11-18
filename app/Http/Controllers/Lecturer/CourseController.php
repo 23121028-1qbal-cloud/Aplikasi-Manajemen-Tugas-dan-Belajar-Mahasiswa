@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Lecturer;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Lecturer\UpdateAssignedCourseRequest;
 use App\Models\MataKuliah;
+use App\Models\Tugas;
 use App\Services\CourseService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -39,6 +40,13 @@ class CourseController extends Controller
 
         return view('pages.lecturer.courses.show', [
             'course' => $course->load('guruDosen')->loadCount('enrollments'),
+            'tasks' => Tugas::query()
+                ->academic()
+                ->where('id_mata_kuliah', $course->id_mata_kuliah)
+                ->with('prioritas')
+                ->withCount('progres')
+                ->orderByDesc('created_at')
+                ->get(),
         ]);
     }
 

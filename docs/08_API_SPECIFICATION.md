@@ -3,7 +3,7 @@
 | Metadata | Value |
 |---|---|
 | Document ID | DOC-08 |
-| Version | 1.4.0 |
+| Version | 1.5.0 |
 | Status | Draft |
 | Primary interface | Laravel Web Routes |
 | JSON API | Only when a specific UI/integration need exists |
@@ -210,3 +210,9 @@ Status route:
 | `PUT /admin/lecturers/{lecturer}` (`admin.lecturers.update`) | Diimplementasikan; body hanya `nama_lengkap` |
 | `PUT /admin/enrollments/{enrollment}` (`admin.enrollments.update`) | Diimplementasikan; body hanya `status` dengan guard transisi REC-04 |
 | `PUT /guru-dosen/courses/{course}` (`lecturer.courses.update`) | Diimplementasikan; body hanya `nama_mata_kuliah` + `row_version`. Kode dan dosen pengampu tetap kewenangan Admin |
+| `POST /guru-dosen/academic-tasks` (`lecturer.academic-tasks.store`) | Diimplementasikan; membuat definisi dan progres awal dalam satu transaksi |
+| `PUT /guru-dosen/academic-tasks/{task}` (`lecturer.academic-tasks.update`) | Diimplementasikan; hanya definisi, memakai `row_version` |
+| `PATCH /guru-dosen/academic-tasks/{task}/close` (`lecturer.academic-tasks.close`) | Diimplementasikan; idempotent dan menghentikan distribusi baru |
+| `PATCH /mahasiswa/academic-tasks/{task}/progress` (`mahasiswa.academic-tasks.progress.update`) | Diimplementasikan; progres sendiri + `row_version` |
+| `PATCH /guru-dosen/progress/{progress}` (`lecturer.progress.update`) | Diimplementasikan; koreksi dalam mata kuliah yang diampu + `row_version`, aktor dicatat |
+| `GET /admin/academic-monitoring` dan `/tasks/{task}` | Diimplementasikan read-only; tidak menyentuh tugas personal/aktivitas belajar |

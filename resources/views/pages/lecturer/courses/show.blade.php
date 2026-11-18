@@ -67,9 +67,37 @@
     </div>
 
     <div class="app-card p-4 mt-3">
-        <h3 class="h6">Tugas Akademik</h3>
-        <p class="small text-body-secondary mb-0">
-            Daftar dan pembuatan tugas akademik tersedia pada Phase 6.
-        </p>
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <h3 class="h6 mb-0">Tugas Akademik</h3>
+            <a href="{{ route('lecturer.academic-tasks.create') }}" class="btn btn-sm btn-primary">Buat Tugas</a>
+        </div>
+
+        @if ($tasks->isEmpty())
+            <p class="small text-body-secondary mb-0">Belum ada tugas akademik untuk mata kuliah ini.</p>
+        @else
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <caption class="visually-hidden">Tugas akademik mata kuliah</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Judul</th>
+                            <th scope="col">Deadline</th>
+                            <th scope="col">Progres</th>
+                            <th scope="col">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($tasks as $task)
+                            <tr>
+                                <td><a href="{{ route('lecturer.academic-tasks.show', $task) }}">{{ $task->judul_tugas }}</a></td>
+                                <td>{{ $task->deadline?->format('d M Y H:i') }}</td>
+                                <td>{{ $task->progres_count }} mahasiswa</td>
+                                <td>{{ $task->is_closed ? 'Ditutup' : 'Terbuka' }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
     </div>
 @endsection

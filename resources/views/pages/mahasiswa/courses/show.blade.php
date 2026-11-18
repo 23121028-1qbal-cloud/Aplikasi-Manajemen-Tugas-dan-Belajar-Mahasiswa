@@ -20,8 +20,39 @@
 
     <div class="app-card p-4 mt-3">
         <h3 class="h6">Tugas Akademik</h3>
-        <p class="small text-body-secondary mb-0">
-            Definisi tugas akademik dan progres Anda tersedia pada Phase 6.
-        </p>
+        <p class="small text-body-secondary">Progres Anda pada tugas akademik mata kuliah ini.</p>
+
+        @if ($progress->isEmpty())
+            <p class="small text-body-secondary mb-0">Belum ada tugas akademik untuk mata kuliah ini.</p>
+        @else
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <caption class="visually-hidden">Tugas akademik dan progres saya</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Judul</th>
+                            <th scope="col">Deadline</th>
+                            <th scope="col">Prioritas</th>
+                            <th scope="col">Progres</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($progress as $row)
+                            <tr>
+                                <td>
+                                    <a href="{{ route('mahasiswa.academic-tasks.show', $row->tugas) }}">{{ $row->tugas?->judul_tugas }}</a>
+                                    @if ($row->tugas?->is_closed)
+                                        <span class="badge text-bg-secondary ms-1">Ditutup</span>
+                                    @endif
+                                </td>
+                                <td>{{ $row->tugas?->deadline?->format('d M Y H:i') }}</td>
+                                <td>{{ $row->tugas?->prioritas?->nama_prioritas }}</td>
+                                <td>{{ $row->statusTugas?->nama_status }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
     </div>
 @endsection

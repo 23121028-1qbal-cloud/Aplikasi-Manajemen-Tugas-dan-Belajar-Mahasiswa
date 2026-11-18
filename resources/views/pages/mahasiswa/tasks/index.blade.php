@@ -112,8 +112,62 @@
             <div class="mt-3">{{ $tasks->links() }}</div>
         @endif
 
-        <p class="small text-body-secondary mt-3 mb-0">
-            Tugas akademik dari dosen akan tampil terpisah pada Phase 6.
-        </p>
+    </div>
+
+    <div class="app-card p-4 mt-3">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <div>
+                <h3 class="h6 mb-1">Tugas Akademik</h3>
+                <p class="small text-body-secondary mb-0">Tugas dari dosen pada mata kuliah yang Anda ikuti.</p>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <caption class="visually-hidden">Daftar tugas akademik dan progres saya</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Judul</th>
+                        <th scope="col">Mata Kuliah</th>
+                        <th scope="col">Deadline</th>
+                        <th scope="col">Prioritas</th>
+                        <th scope="col">Progres</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse ($academicProgress as $row)
+                        <tr>
+                            <td>
+                                <a href="{{ route('mahasiswa.academic-tasks.show', $row->tugas) }}">{{ $row->tugas?->judul_tugas }}</a>
+                                @if ($row->tugas?->is_closed)
+                                    <span class="badge text-bg-secondary ms-1">Ditutup</span>
+                                @endif
+                            </td>
+                            <td>{{ $row->tugas?->mataKuliah?->nama_mata_kuliah ?? '—' }}</td>
+                            <td>{{ $row->tugas?->deadline?->format('d M Y H:i') }}</td>
+                            <td>{{ $row->tugas?->prioritas?->nama_prioritas }}</td>
+                            <td>
+                                @php
+                                    $academicStatusClass = match ($row->statusTugas?->nama_status) {
+                                        'Selesai' => 'text-bg-success',
+                                        'Sedang Dikerjakan' => 'text-bg-warning',
+                                        default => 'text-bg-secondary',
+                                    };
+                                @endphp
+                                <span class="badge {{ $academicStatusClass }}">{{ $row->statusTugas?->nama_status }}</span>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5" class="text-body-secondary">Belum ada tugas akademik.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        @if ($academicProgress->hasPages())
+            <div class="mt-3">{{ $academicProgress->links() }}</div>
+        @endif
     </div>
 @endsection

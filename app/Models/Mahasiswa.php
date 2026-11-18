@@ -51,4 +51,9 @@ class Mahasiswa extends Model
     {
         return $this->hasMany(AktivitasBelajar::class, 'id_mahasiswa', 'id_mahasiswa');
     }
+
+    public function progresTugasAkademik(): HasMany
+    {
+        return $this->hasMany(ProgresTugasAkademik::class, 'id_mahasiswa', 'id_mahasiswa');
+    }
 }

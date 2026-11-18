@@ -3,7 +3,7 @@
 | Metadata | Value |
 |---|---|
 | Document ID | DOC-06 |
-| Version | 1.4.0 |
+| Version | 1.5.0 |
 | Status | Draft — requires schema reconciliation |
 | Database | MySQL |
 | Database name | `db_manajemen_akademik` |
@@ -166,7 +166,7 @@ Lifecycle:
 - `id_mahasiswa` FK.
 - `id_status` FK to `status_tugas`.
 - `id_user_diubah_oleh` FK to `users`.
-- `tanggal_ubah`, timestamps.
+- `tanggal_ubah`, `row_version`, timestamps.
 
 Unique: `(id_tugas, id_mahasiswa)`.
 
@@ -238,8 +238,8 @@ Do not add `row_version` to all tables by default.
 | Entity/operation | Baseline protection | Optimistic locking? |
 |---|---|---|
 | Student personal task update | ownership check + validation + transaction + `row_version` guard | Ya: `row_version` per record (2026-11-18) |
-| Academic task definition | lecturer-course policy + transaction | Ya: `mata_kuliah.row_version` untuk edit definisi mata kuliah; definisi tugas akademik menyusul Phase 6 |
-| Academic progress | unique key + atomic update + transaction | Consider for simultaneous student/lecturer updates |
+| Academic task definition | lecturer-course policy + transaction + `row_version` guard | Ya: `tugas.row_version` untuk definisi tugas akademik, `mata_kuliah.row_version` untuk mata kuliah (2026-11-19) |
+| Academic progress | unique key + atomic update + transaction + `row_version` guard | Ya: `row_version` per baris progres (2026-11-19) |
 | Enrollment create/reactivate | composite unique key + transaction + idempotent handling | Usually not required initially |
 | Academic task distribution | transaction + unique `(id_tugas,id_mahasiswa)` + insert-ignore/upsert semantics without overwriting status | Not required for dedup |
 | Study activity | ownership + validation + transaction + `row_version` guard | Ya: `row_version` per record (2026-11-18) |
@@ -287,7 +287,7 @@ Initial Admin provisioning must be secure and not rely on a public registration 
 - Profile/account mapping and exact `users` schema.
 - Temporary password lifecycle fields/flags.
 - Whether `notifikasi_preferensi` is MVP.
-- Final `row_version` decision untuk academic progress dan definisi tugas akademik (tugas personal, aktivitas belajar, dan mata kuliah sudah memakai `row_version` per 2026-11-18).
+- Final `row_version` decision untuk notifikasi dan archive flags (tugas, aktivitas belajar, mata kuliah, tugas akademik, dan progres akademik sudah memakai `row_version` per 2026-11-19).
 - Exact soft archive columns and affected entities.
 - Exact column names/types/lengths, timestamp timezone policy.
 - MySQL version and CHECK constraint enforcement.

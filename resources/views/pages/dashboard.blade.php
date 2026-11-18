@@ -34,11 +34,11 @@
                 <h3 class="h6">Modul berikutnya</h3>
                 <p class="small text-body-secondary mb-0">
                     @if ($user->hasRole('mahasiswa'))
-                        Kelola tugas personal dan aktivitas belajar melalui menu Tugas dan Aktivitas Belajar.
+                        Kelola tugas personal dan aktivitas belajar, serta perbarui progres tugas akademik melalui menu Tugas.
                     @elseif ($user->hasRole('guru_dosen'))
-                        Mata kuliah yang diampu tersedia pada menu Mata Kuliah Saya; tugas akademik menyusul pada Phase 6.
+                        Mata kuliah yang diampu dan tugas akademik tersedia pada menu Mata Kuliah Saya dan Tugas Akademik.
                     @else
-                        Akun, mata kuliah, dan enrollment tersedia pada menu administrasi. Monitoring akademik menyusul pada Phase 6.
+                        Akun, mata kuliah, enrollment, dan monitoring akademik read-only tersedia pada menu administrasi.
                     @endif
                 </p>
             </div>

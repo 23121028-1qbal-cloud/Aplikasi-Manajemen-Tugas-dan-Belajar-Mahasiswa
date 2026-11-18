@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Student\StorePersonalTaskRequest;
 use App\Http\Requests\Student\UpdatePersonalTaskRequest;
 use App\Models\Prioritas;
+use App\Models\ProgresTugasAkademik;
 use App\Models\StatusTugas;
 use App\Models\Tugas;
 use App\Services\PersonalTaskService;
@@ -34,8 +35,17 @@ class PersonalTaskController extends Controller
             ->paginate(10)
             ->withQueryString();
 
+        $academicProgress = ProgresTugasAkademik::query()
+            ->where('id_mahasiswa', $student->id_mahasiswa)
+            ->whereHas('tugas', fn ($query) => $query->academic()->where('is_archived', false))
+            ->with(['tugas.mataKuliah', 'tugas.prioritas', 'statusTugas'])
+            ->orderByDesc('id_progress')
+            ->paginate(10, ['*'], 'academic_page')
+            ->withQueryString();
+
         return view('pages.mahasiswa.tasks.index', [
             'tasks' => $tasks,
+            'academicProgress' => $academicProgress,
             'priorities' => Prioritas::query()->orderBy('id_prioritas')->get(),
             'statuses' => StatusTugas::query()->orderBy('id_status')->get(),
             'filters' => $request->only(['id_status', 'id_prioritas', 'q']),

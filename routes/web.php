@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\Admin\AcademicMonitoringController;
 use App\Http\Controllers\Admin\CourseController as AdminCourseController;
 use App\Http\Controllers\Admin\EnrollmentController as AdminEnrollmentController;
 use App\Http\Controllers\Admin\LecturerAccountController;
@@ -8,7 +9,9 @@ use App\Http\Controllers\Admin\StudentAccountController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Lecturer\AcademicTaskController as LecturerAcademicTaskController;
 use App\Http\Controllers\Lecturer\CourseController as LecturerCourseController;
+use App\Http\Controllers\Student\AcademicTaskController as StudentAcademicTaskController;
 use App\Http\Controllers\Student\CourseController as StudentCourseController;
 use App\Http\Controllers\Student\PersonalTaskController;
 use App\Http\Controllers\Student\StudyActivityController;
@@ -45,6 +48,11 @@ Route::middleware('auth')->group(function () {
         Route::patch('/mahasiswa/tasks/personal/{task}/archive', [PersonalTaskController::class, 'archive'])->name('mahasiswa.tasks.personal.archive');
         Route::get('/mahasiswa/task-history', [PersonalTaskController::class, 'history'])->name('mahasiswa.task-history');
 
+        Route::get('/mahasiswa/academic-tasks/{task}', [StudentAcademicTaskController::class, 'show'])
+            ->name('mahasiswa.academic-tasks.show');
+        Route::patch('/mahasiswa/academic-tasks/{task}/progress', [StudentAcademicTaskController::class, 'updateProgress'])
+            ->name('mahasiswa.academic-tasks.progress.update');
+
         Route::get('/mahasiswa/study-activities', [StudyActivityController::class, 'index'])->name('mahasiswa.study-activities.index');
         Route::get('/mahasiswa/study-activities/create', [StudyActivityController::class, 'create'])->name('mahasiswa.study-activities.create');
         Route::post('/mahasiswa/study-activities', [StudyActivityController::class, 'store'])->name('mahasiswa.study-activities.store');
@@ -60,6 +68,25 @@ Route::middleware('auth')->group(function () {
         Route::get('/guru-dosen/courses', [LecturerCourseController::class, 'index'])->name('lecturer.courses.index');
         Route::get('/guru-dosen/courses/{course}', [LecturerCourseController::class, 'show'])->name('lecturer.courses.show');
         Route::put('/guru-dosen/courses/{course}', [LecturerCourseController::class, 'update'])->name('lecturer.courses.update');
+
+        Route::get('/guru-dosen/academic-tasks', [LecturerAcademicTaskController::class, 'index'])
+            ->name('lecturer.academic-tasks.index');
+        Route::get('/guru-dosen/academic-tasks/create', [LecturerAcademicTaskController::class, 'create'])
+            ->name('lecturer.academic-tasks.create');
+        Route::post('/guru-dosen/academic-tasks', [LecturerAcademicTaskController::class, 'store'])
+            ->name('lecturer.academic-tasks.store');
+        Route::get('/guru-dosen/academic-tasks/{task}', [LecturerAcademicTaskController::class, 'show'])
+            ->name('lecturer.academic-tasks.show');
+        Route::get('/guru-dosen/academic-tasks/{task}/edit', [LecturerAcademicTaskController::class, 'edit'])
+            ->name('lecturer.academic-tasks.edit');
+        Route::put('/guru-dosen/academic-tasks/{task}', [LecturerAcademicTaskController::class, 'update'])
+            ->name('lecturer.academic-tasks.update');
+        Route::patch('/guru-dosen/academic-tasks/{task}/close', [LecturerAcademicTaskController::class, 'close'])
+            ->name('lecturer.academic-tasks.close');
+        Route::get('/guru-dosen/academic-tasks/{task}/progress', [LecturerAcademicTaskController::class, 'progress'])
+            ->name('lecturer.academic-tasks.progress');
+        Route::patch('/guru-dosen/progress/{progress}', [LecturerAcademicTaskController::class, 'updateProgress'])
+            ->name('lecturer.progress.update');
     });
 
     Route::middleware('role:admin')->group(function () {
@@ -77,6 +104,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/admin/courses/{course}/edit', [AdminCourseController::class, 'edit'])->name('admin.courses.edit');
         Route::put('/admin/courses/{course}', [AdminCourseController::class, 'update'])->name('admin.courses.update');
         Route::patch('/admin/courses/{course}/archive', [AdminCourseController::class, 'archive'])->name('admin.courses.archive');
+
+        Route::get('/admin/academic-monitoring', [AcademicMonitoringController::class, 'index'])
+            ->name('admin.academic-monitoring.index');
+        Route::get('/admin/academic-monitoring/tasks/{task}', [AcademicMonitoringController::class, 'show'])
+            ->name('admin.academic-monitoring.tasks.show');
 
         Route::get('/admin/enrollments', [AdminEnrollmentController::class, 'index'])->name('admin.enrollments.index');
         Route::post('/admin/enrollments', [AdminEnrollmentController::class, 'store'])->name('admin.enrollments.store');

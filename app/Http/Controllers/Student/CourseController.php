@@ -6,6 +6,7 @@ use App\Enums\EnrollmentStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Enrollment;
 use App\Models\MataKuliah;
+use App\Models\ProgresTugasAkademik;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -40,8 +41,16 @@ class CourseController extends Controller
         // Resource milik pihak lain tidak didiskusikan keberadaannya (REC-12).
         abort_unless($enrolled, 404);
 
+        $progress = ProgresTugasAkademik::query()
+            ->where('id_mahasiswa', $student->id_mahasiswa)
+            ->whereHas('tugas', fn ($query) => $query->where('id_mata_kuliah', $course->id_mata_kuliah))
+            ->with(['tugas.prioritas', 'statusTugas'])
+            ->orderByDesc('id_progress')
+            ->get();
+
         return view('pages.mahasiswa.courses.show', [
             'course' => $course->load('guruDosen'),
+            'progress' => $progress,
         ]);
     }
 }
