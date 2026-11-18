@@ -1,0 +1,38 @@
+.app-card {
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--app-radius-lg);
+}
+
+.app-icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    color: var(--text-secondary);
+    background-color: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--app-radius);
+}
+
+.app-icon-button:hover,
+.app-icon-button:focus-visible {
+    color: var(--text-primary);
+    background-color: var(--surface-muted);
+}
+
+[data-theme='dark'] .app-card {
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 4%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+    }
+}

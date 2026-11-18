@@ -1,0 +1,111 @@
+body {
+    min-height: 100vh;
+    background-color: var(--app-bg);
+    color: var(--text-primary);
+}
+
+.app-shell {
+    min-height: 100vh;
+}
+
+.app-sidebar {
+    width: var(--app-sidebar-width);
+    max-width: var(--app-sidebar-width);
+    background-color: var(--surface);
+    border-right: 1px solid var(--border);
+}
+
+.app-sidebar .offcanvas-body {
+    display: flex;
+    flex-direction: column;
+}
+
+.app-brand {
+    color: var(--text-primary);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    text-decoration: none;
+}
+
+.app-brand:hover,
+.app-brand:focus {
+    color: var(--primary);
+}
+
+.app-sidebar .nav-link {
+    color: var(--text-secondary);
+    border-radius: var(--app-radius);
+    padding: 0.5rem 0.75rem;
+}
+
+.app-sidebar .nav-link:hover,
+.app-sidebar .nav-link:focus-visible {
+    color: var(--text-primary);
+    background-color: var(--surface-muted);
+}
+
+.app-sidebar .nav-link.active {
+    color: var(--primary);
+    background-color: var(--surface-muted);
+    font-weight: 600;
+}
+
+.app-sidebar .nav-heading {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.app-main {
+    min-width: 0;
+}
+
+.app-header {
+    min-height: var(--app-header-height);
+    background-color: var(--surface);
+    border-bottom: 1px solid var(--border);
+}
+
+.app-content {
+    width: 100%;
+    max-width: 1200px;
+    padding: 1.5rem 1rem;
+}
+
+@media (min-width: 992px) {
+    .app-content {
+        padding: 2rem 1.5rem;
+    }
+}
+
+.app-guest {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2rem 1rem;
+}
+
+.app-guest .app-guest-card {
+    width: 100%;
+    max-width: 440px;
+}
+
+.skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    z-index: 1080;
+    padding: 0.5rem 1rem;
+    background-color: var(--surface);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--app-radius);
+}
+
+.skip-link:focus {
+    left: 1rem;
+    top: 1rem;
+}
