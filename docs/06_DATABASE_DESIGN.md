@@ -312,3 +312,5 @@ Audit menemukan konflik dan celah berikut. Semua butir berstatus `PROPOSED` atau
 | REC-15 | Versi runtime belum dikunci | Laravel 12.x, PHP 8.4, MySQL 8.4 LTS, Bootstrap 5.3, Bootstrap Icons | `USER-DECIDED` (2026-11-18) |
 
 Catatan environment: fondasi Phase 2 dijalankan pada PHP 8.4.24 dan server database lokal MariaDB 11.8.5 karena MySQL Server belum tersedia di mesin pengembangan. Build produksi tetap menargetkan MySQL sesuai baseline; perbedaan ini harus diverifikasi ulang sebelum migration final.
+
+Catatan implementasi Phase 3 (2026-11-18): `users.id_user` BIGINT UNSIGNED PK, `username` VARCHAR(50) unique, `role` ENUM(`mahasiswa`,`guru_dosen`,`admin`), `is_active` boolean; `mahasiswa.npm` VARCHAR(20) unique dan `guru_dosen.nip_guru` VARCHAR(30) unique, `nama_lengkap` VARCHAR(100). Panjang kolom adalah pilihan implementasi yang masih harus diaudit pada CP2, bukan keputusan final.

@@ -1,5 +1,5 @@
 @php
-    $role = auth()->user()?->role;
+    $role = auth()->user()?->role?->value;
 
     $navigation = [
         'mahasiswa' => [
