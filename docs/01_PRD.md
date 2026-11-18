@@ -3,7 +3,7 @@
 | Metadata | Nilai |
 |---|---|
 | Document ID | DOC-01 |
-| Version | 1.2.0 |
+| Version | 1.3.0 |
 | Status | Draft Baseline — Web Migration |
 | Platform | Web Application |
 | Product | Aplikasi Manajemen Tugas dan Belajar Mahasiswa |
@@ -106,7 +106,7 @@ Catatan: matriks ini mengikuti keputusan bisnis yang sudah disetujui. Jika hak d
 - Logout mengakhiri sesi pada server.
 - Akun Admin awal dibuat melalui proses deployment/Artisan/Seeder yang terlindungi; tidak ada public Admin registration.
 
-Rincian force password change setelah temporary password, expiry temporary password, dan session lifetime: `TBD`.
+Keputusan 2026-11-18 (`USER-DECIDED`, `PRD-TBD-016`): temporary password berlaku **72 jam**, wajib diganti pada login pertama, dan seluruh route selain ubah password/logout diblokir sampai password diganti. Admin yang menerbitkan ulang temporary password mereset expiry dan flag wajib ganti. Session lifetime tetap `TBD`.
 
 ### 6.2 Tugas personal
 - Mahasiswa dapat membuat, melihat, mengubah, dan mengarsipkan tugas personal miliknya.
@@ -155,10 +155,10 @@ Rincian force password change setelah temporary password, expiry temporary passw
 - Re-enrollment pada periode yang sama mengaktifkan kembali baris yang sama; periode akademik berbeda membuat baris baru.
 - Arsip mata kuliah tidak menghapus tugas/progress.
 
-Catatan rekonsiliasi:
-- Transisi ke `Ditolak` dan `Selesai` belum memiliki alur produk. Admin-created enrollment diasumsikan mulai dari `Terdaftar`; perubahan ke `Dibatalkan`/`Selesai` dilakukan Admin dengan konfirmasi. Lihat `PRD-TBD-022` dan `06_DATABASE_DESIGN.md` §12 (REC-04).
-- `tanggal_daftar` sebaiknya tidak ditimpa saat reaktivasi agar riwayat periode pertama tetap utuh; waktu reaktivasi tercatat pada `updated_at`. Lihat REC-05.
-- Daftar field akun yang boleh diubah Admin (nama, username, status, NPM) belum ditetapkan. Lihat `PRD-TBD-023` dan REC-11.
+Keputusan 2026-11-18:
+- Enrollment yang dibuat Admin selalu berstatus `Terdaftar`. Admin dapat mengubah `Terdaftar` → `Dibatalkan` atau `Terdaftar` → `Selesai`. `Selesai`/`Dibatalkan` dapat diaktifkan kembali menjadi `Terdaftar` melalui aksi enrollment periode yang sama. `Ditolak` hanya berlaku untuk alur pengajuan mahasiswa yang tidak termasuk MVP sehingga tidak ditawarkan di UI. Lihat REC-04/`PRD-TBD-022`.
+- `tanggal_daftar` tidak ditimpa saat reaktivasi; waktu reaktivasi tercatat pada `updated_at`. Lihat REC-05.
+- Field akun yang boleh diubah Admin: `nama_lengkap` saja. `username`, `npm`, dan `nip_guru` tidak dapat diubah pada MVP karena menjadi identifier login dan riwayat. Status akun diatur lewat aksi terpisah. Lihat REC-11/`PRD-TBD-023`.
 
 ### 6.6 Notifications
 - Notifikasi disimpan di MySQL.
@@ -249,14 +249,14 @@ Numeric thresholds remain `TBD`.
 
 | ID | Decision | Status |
 |---|---|---|
-| PRD-TBD-016 | Temporary password expiry and forced change | OPEN |
+| PRD-TBD-016 | Temporary password expiry and forced change | USER-DECIDED (2026-11-18): 72 jam + wajib ganti pada login pertama |
 | PRD-TBD-017 | Personal task ownership transfer | OPEN |
 | PRD-TBD-018 | Notification schedule, lead times, timezone and preferences | OPEN |
 | PRD-TBD-019 | Browser session lifetime and concurrent session policy | OPEN |
 | PRD-TBD-020 | Numeric performance and availability targets | OPEN |
 | PRD-TBD-021 | Behavior of progress updates after academic task closure | OPEN |
-| PRD-TBD-022 | Enrollment status transition (`Ditolak`/`Dibatalkan`/`Selesai`) workflow | OPEN |
-| PRD-TBD-023 | Admin-editable account fields for Mahasiswa and Guru/Dosen | OPEN |
+| PRD-TBD-022 | Enrollment status transition (`Ditolak`/`Dibatalkan`/`Selesai`) workflow | USER-DECIDED (2026-11-18): lihat §6.5 |
+| PRD-TBD-023 | Admin-editable account fields for Mahasiswa and Guru/Dosen | USER-DECIDED (2026-11-18): `nama_lengkap` saja |
 | PRD-TBD-024 | Deadline nullability for personal tasks | USER-DECIDED (2026-11-18): wajib untuk tugas personal dan akademik |
 
 ## 11. Acceptance principles

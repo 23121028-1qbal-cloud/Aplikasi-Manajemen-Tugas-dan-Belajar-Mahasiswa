@@ -90,13 +90,10 @@
                                             <span class="badge text-bg-secondary">Nonaktif</span>
                                         @endif
                                     </td>
-                                    <td>
-                                        <form method="POST" action="{{ route('admin.lecturers.temporary-password', $lecturer) }}">
-                                            @csrf
-                                            <button type="submit" class="btn btn-sm btn-outline-secondary">
-                                                Terbitkan Temporary Password
-                                            </button>
-                                        </form>
+                                    <td class="text-nowrap">
+                                        <a href="{{ route('admin.lecturers.show', $lecturer) }}" class="btn btn-sm btn-outline-secondary">
+                                            Detail
+                                        </a>
                                     </td>
                                 </tr>
                             @empty

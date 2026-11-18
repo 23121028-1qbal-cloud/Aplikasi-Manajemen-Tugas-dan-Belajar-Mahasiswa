@@ -6,6 +6,15 @@
     <div class="app-card p-4">
         <h2 class="h5 mb-3">Ubah Password</h2>
 
+        @if (auth()->user()->must_change_password)
+            <div class="alert alert-info" role="status">
+                Anda sedang menggunakan password sementara. Ganti password untuk membuka seluruh fitur aplikasi.
+                @if (auth()->user()->temporary_password_expires_at)
+                    Batas berlaku: {{ auth()->user()->temporary_password_expires_at->format('d M Y H:i') }}.
+                @endif
+            </div>
+        @endif
+
         <form method="POST" action="{{ route('account.password.update') }}" class="mw-100" style="max-width: 480px;">
             @csrf
             @method('PUT')

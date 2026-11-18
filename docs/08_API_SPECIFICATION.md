@@ -3,7 +3,7 @@
 | Metadata | Value |
 |---|---|
 | Document ID | DOC-08 |
-| Version | 1.2.0 |
+| Version | 1.3.0 |
 | Status | Draft |
 | Primary interface | Laravel Web Routes |
 | JSON API | Only when a specific UI/integration need exists |
@@ -65,6 +65,7 @@ The previous mobile-oriented REST API contract is not the primary contract for t
 | PATCH | `/mahasiswa/academic-tasks/{task}/progress` | `mahasiswa.academic-tasks.progress.update` | Update own progress |
 | GET | `/mahasiswa/task-history` | `mahasiswa.task-history` | Completed/archived history |
 | GET | `/mahasiswa/study-activities` | `mahasiswa.study-activities.index` | List |
+| GET | `/mahasiswa/study-history` | `mahasiswa.study-history` | **PROPOSED** (REC-07): completed/archived study history |
 | GET | `/mahasiswa/study-activities/create` | `mahasiswa.study-activities.create` | **PROPOSED** (REC-07): create form |
 | GET | `/mahasiswa/study-activities/{activity}/edit` | `mahasiswa.study-activities.edit` | **PROPOSED** (REC-07): edit form |
 | POST | `/mahasiswa/study-activities` | `mahasiswa.study-activities.store` | Create |
@@ -107,7 +108,7 @@ Course create and lecturer assignment permissions must follow the final approved
 | POST | `/admin/lecturers` | `admin.lecturers.store` | Create lecturer account/profile |
 | GET | `/admin/lecturers/{lecturer}` | `admin.lecturers.show` | Lecturer detail |
 | PUT | `/admin/lecturers/{lecturer}` | `admin.lecturers.update` | Update allowed fields |
-| POST | `/admin/lecturers/{lecturer}/temporary-password` | `admin.lecturers.temporary-password` | **PROPOSED** (REC-09): issue temporary password |
+| POST | `/admin/lecturers/{lecturer}/temporary-password` | `admin.lecturers.temporary-password` | Issue temporary password (REC-09) |
 | GET | `/admin/courses` | `admin.courses.index` | Course list |
 | POST | `/admin/courses` | `admin.courses.store` | Create course |
 | PUT | `/admin/courses/{course}` | `admin.courses.update` | Update course |
@@ -189,7 +190,7 @@ Paginate large account, course, enrollment, task, and progress listings. Exact p
 
 ## 10. Rekonsiliasi route (2026-11-18)
 
-Audit UI/UX terhadap dokumen route menemukan halaman tanpa route dan route tanpa aturan. Penambahan REC-07, REC-08, REC-09, dan REC-10 disetujui pemilik proyek pada 2026-11-18 (`USER-DECIDED`). REC-11 tetap `OPEN` karena daftar field final belum tersedia.
+Audit UI/UX terhadap dokumen route menemukan halaman tanpa route dan route tanpa aturan. Penambahan REC-07, REC-08, REC-09, dan REC-10 disetujui pemilik proyek pada 2026-11-18 (`USER-DECIDED`). REC-11 disetujui pada 1.3.0: `PUT /admin/students/{student}` dan `PUT /admin/lecturers/{lecturer}` hanya menerima `nama_lengkap`.
 
 | ID | Celah | Usulan |
 |---|---|---|
@@ -197,14 +198,15 @@ Audit UI/UX terhadap dokumen route menemukan halaman tanpa route dan route tanpa
 | REC-08 | `GD-07` Course Progress Overview tidak memiliki route | Tambahkan `GET /guru-dosen/courses/{course}/progress` |
 | REC-09 | Reset password Guru/Dosen tidak memiliki route | Tambahkan `POST /admin/lecturers/{lecturer}/temporary-password` |
 | REC-10 | `SH-04` Appearance Settings tidak memiliki route; persistensi tema `TBD` | Route GET/PATCH `/account/appearance`; persistensi awal memakai cookie + atribut `data-theme` tanpa mengubah schema |
-| REC-11 | Field akun yang boleh diubah Admin belum ditetapkan | Tunggu `PRD-TBD-023`; validasi Form Request tidak boleh menerima `role`, `password`, atau `id` |
+| REC-11 | Field akun yang boleh diubah Admin belum ditetapkan | Hanya `nama_lengkap`; `role`, `password`, `username`, `npm`, `nip_guru`, dan `id` tidak diterima |
 
 Aturan keamanan tidak berubah: seluruh route di atas tetap memerlukan session, CSRF pada mutasi, policy resource, dan scoping query di server.
 
-Route berikut **sengaja belum diimplementasikan** karena keputusan yang menjadi prasyaratnya belum ada:
+Status route:
 
-| Route | Alasan |
+| Route | Status |
 |---|---|
-| `PUT /guru-dosen/courses/{course}` (`lecturer.courses.update`) | Field mata kuliah yang boleh diubah dosen dan kewenangan reassignment belum ditetapkan |
-| `PUT /admin/enrollments/{enrollment}` (`admin.enrollments.update`) | Transisi status enrollment bergantung pada REC-04/PRD-TBD-022 |
-| `PUT /admin/students/{student}` (`admin.students.update`) | Daftar field akun yang boleh diubah Admin (REC-11/PRD-TBD-023) belum ditetapkan |
+| `PUT /admin/students/{student}` (`admin.students.update`) | Diimplementasikan; body hanya `nama_lengkap` |
+| `PUT /admin/lecturers/{lecturer}` (`admin.lecturers.update`) | Diimplementasikan; body hanya `nama_lengkap` |
+| `PUT /admin/enrollments/{enrollment}` (`admin.enrollments.update`) | Diimplementasikan; body hanya `status` dengan guard transisi REC-04 |
+| `PUT /guru-dosen/courses/{course}` (`lecturer.courses.update`) | **Belum diimplementasikan**; field mata kuliah yang boleh diubah dosen dan kewenangan reassignment belum ditetapkan |

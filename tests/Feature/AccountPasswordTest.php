@@ -21,7 +21,7 @@ class AccountPasswordTest extends TestCase
                 'password' => 'password-baru',
                 'password_confirmation' => 'password-baru',
             ])
-            ->assertRedirect(route('account.password.edit'));
+            ->assertRedirect(route('mahasiswa.dashboard'));
 
         $this->assertTrue(Hash::check('password-baru', $user->fresh()->password));
     }
@@ -39,6 +39,26 @@ class AccountPasswordTest extends TestCase
             ->assertSessionHasErrors('current_password');
 
         $this->assertTrue(Hash::check('password-lama', $user->fresh()->password));
+    }
+
+    public function test_changing_password_clears_temporary_password_flags(): void
+    {
+        $user = User::factory()->create([
+            'password' => 'sementara123',
+            'must_change_password' => true,
+            'temporary_password_expires_at' => now()->addDay(),
+        ]);
+
+        $this->actingAs($user)->put('/account/password', [
+            'current_password' => 'sementara123',
+            'password' => 'permanen123',
+            'password_confirmation' => 'permanen123',
+        ])->assertRedirect(route('mahasiswa.dashboard'));
+
+        $user->refresh();
+
+        $this->assertFalse($user->must_change_password);
+        $this->assertNull($user->temporary_password_expires_at);
     }
 
     public function test_new_password_must_be_at_least_eight_characters(): void

@@ -50,6 +50,40 @@ class StudentAccountTest extends TestCase
             ->assertSee($student->user->username);
     }
 
+    public function test_admin_can_update_only_student_name(): void
+    {
+        $student = Mahasiswa::factory()->create(['nama_lengkap' => 'Nama Lama']);
+        $npm = $student->npm;
+        $username = $student->user->username;
+
+        $this->actingAs($this->admin())
+            ->put(route('admin.students.update', $student), [
+                'nama_lengkap' => 'Nama Baru',
+                'username' => 'diubah',
+                'npm' => '99999999',
+                'role' => 'admin',
+            ])
+            ->assertRedirect(route('admin.students.show', $student));
+
+        $student->refresh();
+
+        $this->assertSame('Nama Baru', $student->nama_lengkap);
+        $this->assertSame($npm, $student->npm);
+        $this->assertSame($username, $student->user->username);
+        $this->assertSame(Role::Mahasiswa, $student->user->role);
+    }
+
+    public function test_student_detail_exposes_accessible_confirmation_dialogs(): void
+    {
+        $student = Mahasiswa::factory()->create();
+
+        $this->actingAs($this->admin())
+            ->get(route('admin.students.show', $student))
+            ->assertOk()
+            ->assertSee('aria-labelledby="student-status-'.$student->id_mahasiswa.'-label"', false)
+            ->assertSee('aria-label="Tutup dialog"', false);
+    }
+
     public function test_admin_can_deactivate_and_activate_student(): void
     {
         $student = Mahasiswa::factory()->create();

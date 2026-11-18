@@ -86,6 +86,62 @@ class LoginTest extends TestCase
         $this->assertGuest();
     }
 
+    public function test_temporary_password_user_is_redirected_to_password_change(): void
+    {
+        $user = User::factory()->create([
+            'must_change_password' => true,
+            'temporary_password_expires_at' => now()->addHours(72),
+        ]);
+
+        $this->post('/login', ['username' => $user->username, 'password' => 'password'])
+            ->assertRedirect(route('account.password.edit'));
+
+        $this->assertAuthenticatedAs($user);
+    }
+
+    public function test_user_with_unrotated_password_cannot_open_other_pages(): void
+    {
+        $user = User::factory()->create([
+            'must_change_password' => true,
+            'temporary_password_expires_at' => now()->addHours(72),
+        ]);
+
+        $this->actingAs($user)
+            ->get('/account')
+            ->assertRedirect(route('account.password.edit'));
+
+        $this->actingAs($user)
+            ->get('/mahasiswa/dashboard')
+            ->assertRedirect(route('account.password.edit'));
+    }
+
+    public function test_expired_temporary_password_cannot_login(): void
+    {
+        $user = User::factory()->create([
+            'must_change_password' => true,
+            'temporary_password_expires_at' => now()->subMinute(),
+        ]);
+
+        $this->post('/login', ['username' => $user->username, 'password' => 'password'])
+            ->assertSessionHasErrors('username');
+
+        $this->assertGuest();
+    }
+
+    public function test_expired_temporary_password_ends_existing_session(): void
+    {
+        $user = User::factory()->create([
+            'must_change_password' => true,
+            'temporary_password_expires_at' => now()->subMinute(),
+        ]);
+
+        $this->actingAs($user)
+            ->get('/account/password')
+            ->assertRedirect(route('login'));
+
+        $this->assertGuest();
+    }
+
     public function test_authenticated_user_is_redirected_away_from_login_page(): void
     {
         $user = User::factory()->create();

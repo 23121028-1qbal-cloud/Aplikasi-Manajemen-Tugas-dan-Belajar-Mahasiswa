@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\EnrollmentStatus;
 use App\Enums\Semester;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreEnrollmentRequest;
+use App\Http\Requests\Admin\UpdateEnrollmentStatusRequest;
 use App\Models\Enrollment;
 use App\Models\Mahasiswa;
 use App\Models\MataKuliah;
@@ -42,5 +44,16 @@ class EnrollmentController extends Controller
         return redirect()
             ->route('admin.enrollments.index')
             ->with('status', $message);
+    }
+
+    public function update(UpdateEnrollmentStatusRequest $request, Enrollment $enrollment, EnrollmentService $service): RedirectResponse
+    {
+        $status = $request->enum('status', EnrollmentStatus::class);
+
+        $service->changeStatus($enrollment, $status);
+
+        return redirect()
+            ->route('admin.enrollments.index')
+            ->with('status', "Status enrollment diubah menjadi {$status->value}.");
     }
 }

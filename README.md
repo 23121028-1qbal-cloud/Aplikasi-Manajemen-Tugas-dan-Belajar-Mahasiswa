@@ -14,7 +14,7 @@ Dokumentasi baseline proyek **Web Application** berbasis Laravel Full-Stack.
 - Notifikasi: notifikasi dalam aplikasi web dan Laravel Scheduler.
 - Deployment target: satu VM Oracle Cloud Infrastructure (OCI) untuk Nginx, Laravel, dan MySQL.
 
-Dokumen ini merupakan **Draft Baseline v1.2.0**. Keputusan migrasi platform dan rekonsiliasi REC-01 s.d. REC-15 (kecuali REC-04 dan REC-11) telah disetujui pada 2026-11-18. Beberapa rincian produk, database, keamanan, dan operasional tetap ditandai `TBD` atau `OPEN`. Status tersebut tidak boleh dianggap sebagai persetujuan otomatis.
+Dokumen ini merupakan **Draft Baseline v1.3.0**. Keputusan migrasi platform dan seluruh rekonsiliasi REC-01 s.d. REC-15 telah disetujui pada 2026-11-18, termasuk REC-04, REC-11, dan `PRD-TBD-016`. Beberapa rincian produk, database, keamanan, dan operasional tetap ditandai `TBD` atau `OPEN`. Status tersebut tidak boleh dianggap sebagai persetujuan otomatis.
 
 ## Struktur dokumentasi
 
@@ -86,15 +86,9 @@ project/
 
 Audit repository menemukan konflik dan celah dokumentasi. Rekonsiliasi `REC-01` s.d. `REC-15` dicatat di `docs/06_DATABASE_DESIGN.md` §12 (database), `docs/08_API_SPECIFICATION.md` §10 (route), dan `docs/09_TESTING_STRATEGY.md` §13 (testing).
 
-**Disetujui 2026-11-18 (`USER-DECIDED`):** REC-01, REC-02, REC-03, REC-05, REC-06, REC-07, REC-08, REC-09, REC-10, REC-12, REC-13, REC-14, REC-15, serta `PRD-TBD-024`.
+**Disetujui 2026-11-18 (`USER-DECIDED`):** seluruh REC-01 s.d. REC-15, `PRD-TBD-016`, `PRD-TBD-022`, `PRD-TBD-023`, dan `PRD-TBD-024`.
 
-**Masih OPEN:**
-
-| ID | Topik | Rujukan |
-|---|---|---|
-| REC-04 | Transisi status enrollment (`Ditolak`/`Dibatalkan`/`Selesai`) | `01` PRD-TBD-022 |
-| REC-11 | Field akun yang boleh diubah Admin | `01` PRD-TBD-023 |
-| PRD-TBD-016 | Expiry dan forced rotation temporary password | `01` §10, `02` §4.1 |
+**Blocker Phase 4:** tidak ada lagi. Yang masih terbuka adalah keputusan non-blocker seperti waktu notifikasi, session lifetime, target performa, dan parameter deployment.
 
 ## Riwayat versi dokumentasi
 
@@ -104,5 +98,6 @@ Audit repository menemukan konflik dan celah dokumentasi. Rekonsiliasi `REC-01` 
 | 1.1.0 | 2026-11-17 | Draft migrasi web | Mengganti target menjadi Web Application, Laravel Blade, session auth, online-first, Bootstrap, Web Routes, dan deployment satu VM OCI. |
 | 1.1.1 | 2026-11-18 | Draft + rekonsiliasi | Menambahkan catatan rekonsiliasi `PROPOSED` (REC-01 s.d. REC-15), open decision baru (PRD-TBD-022 s.d. 024), dan status pelaksanaan Phase 0/2. Tidak mengubah keputusan baseline. |
 | 1.2.0 | 2026-11-18 | Draft + keputusan | Menyetujui REC-01/02/03/05/06/07/08/09/10/12/13/14/15 dan PRD-TBD-024. REC-04, REC-11, dan PRD-TBD-016 tetap OPEN. |
+| 1.3.0 | 2026-11-18 | Draft + keputusan | Menyetujui REC-04 (transisi enrollment), REC-11 (`nama_lengkap` saja), dan PRD-TBD-016 (temporary password 72 jam + wajib ganti). |
 
 Dokumen-dokumen ini belum merupakan bukti bahwa aplikasi telah diimplementasikan atau dideploy.

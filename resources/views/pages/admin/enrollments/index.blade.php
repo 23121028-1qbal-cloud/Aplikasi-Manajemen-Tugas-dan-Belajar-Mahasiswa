@@ -104,6 +104,7 @@
                                 <th scope="col">Periode</th>
                                 <th scope="col">Status</th>
                                 <th scope="col">Terdaftar</th>
+                                <th scope="col">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -130,10 +131,28 @@
                                         <span class="badge {{ $statusClass }}">{{ $enrollment->status->value }}</span>
                                     </td>
                                     <td>{{ $enrollment->tanggal_daftar?->format('d M Y') }}</td>
+                                    <td class="text-nowrap">
+                                        @if ($enrollment->status === \App\Enums\EnrollmentStatus::Terdaftar)
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-danger"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#enrollment-cancel-{{ $enrollment->id_mahasiswa_mata_kuliah }}">
+                                                Batalkan
+                                            </button>
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-secondary"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#enrollment-complete-{{ $enrollment->id_mahasiswa_mata_kuliah }}">
+                                                Selesaikan
+                                            </button>
+                                        @else
+                                            <span class="small text-body-secondary">Aktifkan lewat form periode yang sama.</span>
+                                        @endif
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="text-body-secondary">Belum ada enrollment.</td>
+                                    <td colspan="6" class="text-body-secondary">Belum ada enrollment.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -143,6 +162,33 @@
                 @if ($enrollments->hasPages())
                     <div class="mt-3">{{ $enrollments->links() }}</div>
                 @endif
+
+                @foreach ($enrollments as $enrollment)
+                    @if ($enrollment->status === \App\Enums\EnrollmentStatus::Terdaftar)
+                        <x-confirm-modal
+                            id="enrollment-cancel-{{ $enrollment->id_mahasiswa_mata_kuliah }}"
+                            title="Batalkan enrollment?"
+                            message="Mahasiswa tidak lagi tercatat aktif pada mata kuliah ini. Riwayat progres akademik tetap tersimpan."
+                            :action="route('admin.enrollments.update', $enrollment)"
+                            method="PUT"
+                            confirm="Batalkan Enrollment"
+                        >
+                            <input type="hidden" name="status" value="Dibatalkan">
+                        </x-confirm-modal>
+
+                        <x-confirm-modal
+                            id="enrollment-complete-{{ $enrollment->id_mahasiswa_mata_kuliah }}"
+                            title="Selesaikan enrollment?"
+                            message="Status periode ini menjadi Selesai. Riwayat enrollment dan progres tetap tersimpan."
+                            :action="route('admin.enrollments.update', $enrollment)"
+                            method="PUT"
+                            confirm="Selesaikan Enrollment"
+                            variant="primary"
+                        >
+                            <input type="hidden" name="status" value="Selesai">
+                        </x-confirm-modal>
+                    @endif
+                @endforeach
             </div>
         </div>
     </div>

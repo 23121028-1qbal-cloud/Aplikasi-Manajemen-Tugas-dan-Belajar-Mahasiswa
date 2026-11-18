@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
@@ -45,7 +46,23 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        $user = Auth::user();
+
+        if ($user->must_change_password && $this->temporaryPasswordHasExpired($user)) {
+            Auth::logout();
+
+            throw ValidationException::withMessages([
+                'username' => 'Temporary password sudah kedaluwarsa. Minta Admin menerbitkan password baru.',
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
+    }
+
+    protected function temporaryPasswordHasExpired(User $user): bool
+    {
+        return $user->temporary_password_expires_at !== null
+            && $user->temporary_password_expires_at->isPast();
     }
 
     /**

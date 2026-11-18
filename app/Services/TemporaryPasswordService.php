@@ -7,6 +7,8 @@ use Illuminate\Support\Str;
 
 class TemporaryPasswordService
 {
+    public const TTL_HOURS = 72;
+
     /**
      * Password hanya dikembalikan sekali ke pemanggil untuk ditampilkan.
      * Jangan mencatat nilai ini ke log atau menyimpannya sebagai plaintext.
@@ -22,15 +24,25 @@ class TemporaryPasswordService
     }
 
     /**
-     * Terbitkan password baru untuk akun yang sudah ada.
+     * Terbitkan temporary password baru dan paksa penggantian pada login pertama.
      * Nilai plaintext dikembalikan sekali untuk ditampilkan Admin.
      */
-    public function resetFor(User $user): string
+    public function issueFor(User $user): string
     {
         $temporaryPassword = $this->generate();
 
-        $user->update(['password' => $temporaryPassword]);
+        $user->forceFill([
+            'password' => $temporaryPassword,
+            'must_change_password' => true,
+            'temporary_password_expires_at' => now()->addHours(self::TTL_HOURS),
+        ])->save();
 
         return $temporaryPassword;
+    }
+
+    public function hasExpired(User $user): bool
+    {
+        return $user->temporary_password_expires_at !== null
+            && $user->temporary_password_expires_at->isPast();
     }
 }

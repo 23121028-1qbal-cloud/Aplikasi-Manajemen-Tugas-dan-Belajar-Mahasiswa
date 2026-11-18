@@ -3,7 +3,7 @@
 | Metadata | Value |
 |---|---|
 | Document ID | DOC-09 |
-| Version | 1.2.0 |
+| Version | 1.3.0 |
 | Status | Draft |
 | Target | Laravel Web Application |
 
@@ -209,7 +209,9 @@ A feature is complete only when:
 |---|---|---|
 | REC-01 | `T-NOTIF-03` harus membuktikan satu event membuat notifikasi untuk **semua** penerima tanpa tabrakan unique | `T-NOTIF-04`: distribusi ke 3 mahasiswa menghasilkan 3 notifikasi, dan pemrosesan ulang tidak menambah baris |
 | REC-02 | Scoping ownership berubah bila `aktivitas_belajar` memakai `id_mahasiswa` | `T-STUDY-04`: dosen/admin tidak dapat mengakses aktivitas via ID langsung; mahasiswa lain mendapat 404 |
-| REC-04 | Transisi status enrollment belum ada | `T-ENR-05`: transisi tidak sah ditolak; `Terdaftar` tetap satu baris per periode |
+| REC-04 | Transisi status enrollment | `T-ENR-05`: `Terdaftar`→`Dibatalkan`/`Selesai` berhasil, transisi tidak sah ditolak, riwayat tetap ada |
+| PRD-TBD-016 | Temporary password wajib ganti & expiry | `T-AUTH-08`: login dengan temporary password diarahkan ke ubah password dan route lain diblokir; password kedaluwarsa ditolak |
+| REC-11 | Field akun Admin | `T-ACC-01`: hanya `nama_lengkap` berubah; upaya mengubah `username`/`npm`/`role` diabaikan |
 | REC-10 | Persistensi tema | Test layout: `data-theme` mengikuti cookie dan bertahan antar request |
 | REC-12 | Kebijakan disclosure | Test memastikan resource milik pengguna lain mengembalikan 404, bukan 403 yang membocorkan keberadaan |
 | REC-15 | Versi runtime | Catat versi aktual pada laporan test; jangan klaim kompatibilitas MySQL sebelum diuji |

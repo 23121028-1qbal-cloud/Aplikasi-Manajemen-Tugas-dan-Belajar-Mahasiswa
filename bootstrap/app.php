@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureAccountIsActive;
+use App\Http\Middleware\EnsurePasswordIsRotated;
 use App\Http\Middleware\EnsureUserHasRole;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -17,7 +18,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // tanpa menjadikannya sumber otorisasi atau data aplikasi (REC-10, PROPOSED).
         $middleware->encryptCookies(except: ['theme']);
 
-        $middleware->web(append: [EnsureAccountIsActive::class]);
+        $middleware->web(append: [
+            EnsureAccountIsActive::class,
+            EnsurePasswordIsRotated::class,
+        ]);
 
         $middleware->alias([
             'role' => EnsureUserHasRole::class,

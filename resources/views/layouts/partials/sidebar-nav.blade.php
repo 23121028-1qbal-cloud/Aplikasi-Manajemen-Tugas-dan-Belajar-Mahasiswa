@@ -4,9 +4,10 @@
     $navigation = [
         'mahasiswa' => [
             ['label' => 'Dashboard', 'icon' => 'bi-speedometer2', 'route' => 'mahasiswa.dashboard'],
-            ['label' => 'Semua Tugas', 'icon' => 'bi-list-task', 'route' => 'mahasiswa.tasks.index'],
+            ['label' => 'Tugas', 'icon' => 'bi-list-task', 'route' => 'mahasiswa.tasks.index'],
             ['label' => 'Riwayat Tugas', 'icon' => 'bi-archive', 'route' => 'mahasiswa.task-history'],
             ['label' => 'Aktivitas Belajar', 'icon' => 'bi-journal-bookmark', 'route' => 'mahasiswa.study-activities.index'],
+            ['label' => 'Riwayat Belajar', 'icon' => 'bi-clock-history', 'route' => 'mahasiswa.study-history'],
             ['label' => 'Mata Kuliah', 'icon' => 'bi-mortarboard', 'route' => 'mahasiswa.courses.index'],
         ],
         'guru_dosen' => [

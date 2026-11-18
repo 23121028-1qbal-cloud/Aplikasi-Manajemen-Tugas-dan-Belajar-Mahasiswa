@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\UpdateStudentNameRequest;
 use App\Http\Requests\Admin\UpdateStudentStatusRequest;
 use App\Models\Mahasiswa;
 use App\Services\TemporaryPasswordService;
@@ -46,6 +47,17 @@ class StudentAccountController extends Controller
         ]);
     }
 
+    public function update(UpdateStudentNameRequest $request, Mahasiswa $student): RedirectResponse
+    {
+        $student->update([
+            'nama_lengkap' => $request->validated('nama_lengkap'),
+        ]);
+
+        return redirect()
+            ->route('admin.students.show', $student)
+            ->with('status', 'Nama mahasiswa diperbarui.');
+    }
+
     public function updateStatus(UpdateStudentStatusRequest $request, Mahasiswa $student): RedirectResponse
     {
         $student->user->update([
@@ -59,7 +71,7 @@ class StudentAccountController extends Controller
 
     public function temporaryPassword(Mahasiswa $student, TemporaryPasswordService $temporaryPasswords): RedirectResponse
     {
-        $temporaryPassword = $temporaryPasswords->resetFor($student->user);
+        $temporaryPassword = $temporaryPasswords->issueFor($student->user);
 
         return redirect()
             ->route('admin.students.show', $student)

@@ -30,7 +30,13 @@ class AppServiceProvider extends ServiceProvider
         RedirectIfAuthenticated::redirectUsing(function (Request $request) {
             $user = $request->user();
 
-            return $user ? route(RoleHome::routeName($user->role)) : '/login';
+            if ($user === null) {
+                return '/login';
+            }
+
+            return $user->must_change_password
+                ? route('account.password.edit')
+                : route(RoleHome::routeName($user->role));
         });
     }
 }

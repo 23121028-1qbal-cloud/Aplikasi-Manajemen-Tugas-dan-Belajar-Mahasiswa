@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreLecturerRequest;
+use App\Http\Requests\Admin\UpdateLecturerNameRequest;
 use App\Models\GuruDosen;
 use App\Services\LecturerAccountService;
 use App\Services\TemporaryPasswordService;
@@ -22,6 +23,24 @@ class LecturerAccountController extends Controller
         ]);
     }
 
+    public function show(GuruDosen $lecturer): View
+    {
+        return view('pages.admin.lecturers.show', [
+            'lecturer' => $lecturer->load('user')->loadCount('mataKuliah'),
+        ]);
+    }
+
+    public function update(UpdateLecturerNameRequest $request, GuruDosen $lecturer): RedirectResponse
+    {
+        $lecturer->update([
+            'nama_lengkap' => $request->validated('nama_lengkap'),
+        ]);
+
+        return redirect()
+            ->route('admin.lecturers.show', $lecturer)
+            ->with('status', 'Nama guru/dosen diperbarui.');
+    }
+
     public function store(StoreLecturerRequest $request, LecturerAccountService $service): RedirectResponse
     {
         $result = $service->create($request->validated());
@@ -37,7 +56,7 @@ class LecturerAccountController extends Controller
 
     public function resetTemporaryPassword(GuruDosen $lecturer, TemporaryPasswordService $temporaryPasswords): RedirectResponse
     {
-        $temporaryPassword = $temporaryPasswords->resetFor($lecturer->user);
+        $temporaryPassword = $temporaryPasswords->issueFor($lecturer->user);
 
         return redirect()
             ->route('admin.lecturers.index')

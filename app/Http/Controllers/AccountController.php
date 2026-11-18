@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Account\UpdatePasswordRequest;
+use App\Support\RoleHome;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -23,14 +24,16 @@ class AccountController extends Controller
 
     public function updatePassword(UpdatePasswordRequest $request): RedirectResponse
     {
-        $request->user()->update([
+        $request->user()->forceFill([
             'password' => $request->validated('password'),
-        ]);
+            'must_change_password' => false,
+            'temporary_password_expires_at' => null,
+        ])->save();
 
         $request->session()->regenerateToken();
 
         return redirect()
-            ->route('account.password.edit')
+            ->route(RoleHome::routeName($request->user()->role))
             ->with('status', 'Password berhasil diperbarui.');
     }
 }

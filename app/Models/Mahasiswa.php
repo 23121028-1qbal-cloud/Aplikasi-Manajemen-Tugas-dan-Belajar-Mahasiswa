@@ -40,4 +40,15 @@ class Mahasiswa extends Model
     {
         return $this->hasMany(Enrollment::class, 'id_mahasiswa', 'id_mahasiswa');
     }
+
+    public function tugasPersonal(): HasMany
+    {
+        return $this->hasMany(Tugas::class, 'id_mahasiswa_pemilik', 'id_mahasiswa')
+            ->where('task_type', 'personal');
+    }
+
+    public function aktivitasBelajar(): HasMany
+    {
+        return $this->hasMany(AktivitasBelajar::class, 'id_mahasiswa', 'id_mahasiswa');
+    }
 }

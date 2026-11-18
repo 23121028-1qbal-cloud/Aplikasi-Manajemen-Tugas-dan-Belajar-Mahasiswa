@@ -18,6 +18,8 @@ class User extends Authenticatable
         'password',
         'role',
         'is_active',
+        'must_change_password',
+        'temporary_password_expires_at',
     ];
 
     protected $hidden = [
@@ -30,6 +32,8 @@ class User extends Authenticatable
             'password' => 'hashed',
             'role' => Role::class,
             'is_active' => 'boolean',
+            'must_change_password' => 'boolean',
+            'temporary_password_expires_at' => 'datetime',
         ];
     }
 

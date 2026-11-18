@@ -27,6 +27,12 @@ class LoginController extends Controller
 
         $request->session()->regenerate();
 
+        if ($request->user()->must_change_password) {
+            return redirect()
+                ->route('account.password.edit')
+                ->with('status', 'Password sementara wajib diganti sebelum melanjutkan.');
+        }
+
         return redirect()
             ->intended(route(RoleHome::routeName($request->user()->role)))
             ->with('status', 'Berhasil masuk.');

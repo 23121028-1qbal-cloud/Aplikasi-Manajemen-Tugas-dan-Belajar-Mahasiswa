@@ -84,4 +84,27 @@ class EnrollmentService
             ];
         });
     }
+
+    /**
+     * @throws ValidationException
+     */
+    public function changeStatus(Enrollment $enrollment, EnrollmentStatus $status): Enrollment
+    {
+        return DB::transaction(function () use ($enrollment, $status) {
+            $locked = Enrollment::query()
+                ->whereKey($enrollment->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if (! $locked->status->canTransitionTo($status)) {
+                throw ValidationException::withMessages([
+                    'status' => 'Transisi status enrollment tidak diizinkan.',
+                ]);
+            }
+
+            $locked->update(['status' => $status]);
+
+            return $locked->fresh();
+        });
+    }
 }

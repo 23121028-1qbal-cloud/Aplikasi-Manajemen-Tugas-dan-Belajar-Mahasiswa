@@ -24,6 +24,8 @@ class LecturerAccountService
                 'password' => $temporaryPassword,
                 'role' => Role::GuruDosen,
                 'is_active' => true,
+                'must_change_password' => true,
+                'temporary_password_expires_at' => now()->addHours(TemporaryPasswordService::TTL_HOURS),
             ]);
 
             $lecturer = $user->guruDosen()->create([

@@ -3,7 +3,7 @@
 | Metadata | Value |
 |---|---|
 | Document ID | DOC-02 |
-| Version | 1.2.0 |
+| Version | 1.3.0 |
 | Status | Draft |
 | Target | Laravel Blade Web Application |
 | Parent | `01_PRD.md` |
@@ -46,7 +46,7 @@ The system is a server-rendered Laravel Full-Stack application. Browser requests
 | SRS-AUTH-011 | Passwords shall be stored only as secure hashes using Laravel hashing facilities. | MUST |
 | SRS-AUTH-012 | Public registration shall not allow a user to select Admin or Guru/Dosen role. | MUST |
 | SRS-AUTH-013 | Deactivated accounts shall not be allowed to establish a new authenticated session. | MUST |
-| SRS-AUTH-014 | The application shall provide a password-change workflow for authenticated users. | SHOULD; exact temporary-password flow TBD |
+| SRS-AUTH-014 | The application shall provide a password-change workflow for authenticated users, and shall force a temporary password to be changed on first login. | MUST |
 
 ### 4.2 Personal tasks
 
@@ -238,19 +238,26 @@ Concurrency strategy shall be selected per entity and operation:
 - Performance and availability thresholds.
 - 403 vs 404 resource disclosure policy.
 - Final concurrency rules by table.
-- Enrollment status transition workflow (`PRD-TBD-022`).
-- Admin-editable account fields (`PRD-TBD-023`).
-- Personal task deadline nullability (`PRD-TBD-024`).
+- Personal task deadline nullability (`PRD-TBD-024`, decided: required).
+
+## 12. Keputusan 2026-11-18
+
+| ID | Keputusan |
+|---|---|
+| REC-04 / PRD-TBD-022 | Enrollment Admin selalu `Terdaftar`; transisi diizinkan `Terdaftar`→`Dibatalkan` dan `Terdaftar`→`Selesai`; reaktivasi `Dibatalkan`/`Selesai`→`Terdaftar` melalui enrollment periode sama; `Ditolak` tidak ditawarkan di MVP. |
+| REC-11 / PRD-TBD-023 | Admin hanya dapat mengubah `nama_lengkap`; `username`, `npm`, `nip_guru` immutable; status akun lewat aksi terpisah. |
+| PRD-TBD-016 | Temporary password berlaku 72 jam, wajib diganti pada login pertama, route lain diblokir sampai diganti, dan penerbitan ulang mereset expiry. |
 
 ## 11. Rekonsiliasi dokumentasi (2026-11-18)
 
-Rekonsiliasi disetujui pemilik proyek pada 2026-11-18. Status efektif: REC-01, REC-02, REC-03, REC-05, REC-06, REC-07, REC-08, REC-09, REC-10, REC-12, REC-13, REC-14, dan REC-15 menjadi `USER-DECIDED`. REC-04 dan REC-11 tetap `OPEN` karena aturan/daftar finalnya belum tersedia.
+Rekonsiliasi disetujui pemilik proyek pada 2026-11-18. Seluruh butir REC-01 s.d. REC-15 berstatus `USER-DECIDED`; REC-04 dan REC-11 disetujui pada revisi 1.3.0 dengan aturan pada §12.
 
 | ID | Requirement terdampak | Catatan |
 |---|---|---|
 | REC-01 | SRS-NOTIF-005 | Cakupan dedup adalah per penerima: unique `(id_user, dedup_key)` atau key yang memuat recipient. |
 | REC-02 | SRS-TASK-*, SRS-STUDY-009 | Konvensi ownership data personal diseragamkan ke profil `mahasiswa`, bukan akun `users`. Menunggu keputusan CP2. |
-| REC-04 | SRS-ENR-004/006 | Status enrollment awal `Terdaftar`; transisi lain menunggu `PRD-TBD-022`. |
+| REC-04 | SRS-ENR-004/006 | Status awal `Terdaftar`; transisi `Dibatalkan`/`Selesai` dari `Terdaftar`; reaktivasi periode sama; `Ditolak` tidak dipakai. |
+| REC-11 | SRS-AUTH-009 | Admin hanya mengubah `nama_lengkap`; identifier tetap immutable. |
 | REC-07 | — | Tambahan route create/edit aktivitas belajar (celah UI `ST-08`). |
 | REC-08 | SRS-ACAD-011 | Tambahan route rekap progres per mata kuliah (celah UI `GD-07`). |
 | REC-09 | SRS-AUTH-010 | Temporary password juga mencakup akun Guru/Dosen. |

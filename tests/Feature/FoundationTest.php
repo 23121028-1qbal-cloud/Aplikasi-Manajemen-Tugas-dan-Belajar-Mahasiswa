@@ -27,6 +27,24 @@ class FoundationTest extends TestCase
         $response->assertSee('Masuk');
     }
 
+    public function test_validation_summary_links_to_invalid_fields(): void
+    {
+        $this->withoutVite();
+
+        $response = $this->followingRedirects()->from('/register')->post('/register', [
+            'npm' => '',
+            'nama_lengkap' => '',
+            'username' => '',
+            'password' => 'pendek',
+            'password_confirmation' => 'pendek',
+        ]);
+
+        $response->assertOk();
+        $response->assertSee('id="validation-errors"', false);
+        $response->assertSee('href="#npm"', false);
+        $response->assertSee('role="alert"', false);
+    }
+
     public function test_theme_attribute_follows_cookie_preference(): void
     {
         $this->withoutVite();

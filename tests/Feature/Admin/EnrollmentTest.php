@@ -135,6 +135,37 @@ class EnrollmentTest extends TestCase
             ->assertSessionHasErrors('tahun_akademik');
     }
 
+    public function test_admin_can_cancel_and_complete_active_enrollment(): void
+    {
+        $enrollment = Enrollment::factory()->create();
+
+        $this->actingAs($this->admin())
+            ->put(route('admin.enrollments.update', $enrollment), ['status' => 'Dibatalkan'])
+            ->assertRedirect(route('admin.enrollments.index'));
+
+        $this->assertSame(EnrollmentStatus::Dibatalkan, $enrollment->fresh()->status);
+
+        $other = Enrollment::factory()->create();
+
+        $this->actingAs($this->admin())
+            ->put(route('admin.enrollments.update', $other), ['status' => 'Selesai']);
+
+        $this->assertSame(EnrollmentStatus::Selesai, $other->fresh()->status);
+    }
+
+    public function test_invalid_enrollment_transition_is_rejected(): void
+    {
+        $enrollment = Enrollment::factory()->create([
+            'status' => EnrollmentStatus::Selesai,
+        ]);
+
+        $this->actingAs($this->admin())
+            ->put(route('admin.enrollments.update', $enrollment), ['status' => 'Terdaftar'])
+            ->assertSessionHasErrors('status');
+
+        $this->assertSame(EnrollmentStatus::Selesai, $enrollment->fresh()->status);
+    }
+
     public function test_non_admin_cannot_create_enrollment(): void
     {
         $student = Mahasiswa::factory()->create();

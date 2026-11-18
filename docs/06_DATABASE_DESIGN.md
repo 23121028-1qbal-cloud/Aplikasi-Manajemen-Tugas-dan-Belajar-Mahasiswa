@@ -3,7 +3,7 @@
 | Metadata | Value |
 |---|---|
 | Document ID | DOC-06 |
-| Version | 1.2.0 |
+| Version | 1.3.0 |
 | Status | Draft — requires schema reconciliation |
 | Database | MySQL |
 | Database name | `db_manajemen_akademik` |
@@ -303,7 +303,7 @@ Audit menemukan konflik dan celah berikut. Semua butir berstatus `PROPOSED` atau
 | REC-01 | `dedup_key` unique global vs event multi-penerima | Unique komposit `(id_user, dedup_key)` | `USER-DECIDED` (2026-11-18) |
 | REC-02 | `tugas` memakai `id_mahasiswa_pemilik`, `aktivitas_belajar` memakai `id_user` | Ownership data personal diseragamkan ke `mahasiswa` | `USER-DECIDED` (2026-11-18) |
 | REC-03 | PK `id_*` menyimpang dari default Laravel | Nama PK/FK dokumen dipertahankan sebagai `$primaryKey` eksplisit | `USER-DECIDED` (2026-11-18) |
-| REC-04 | Status `Ditolak`/`Selesai` tanpa alur transisi | Belum ada aturan transisi eksplisit; tetap `OPEN` (`PRD-TBD-022`) | `OPEN` |
+| REC-04 | Status `Ditolak`/`Selesai` tanpa alur transisi | Transisi `Terdaftar`→`Dibatalkan`/`Selesai`; reaktivasi lewat periode sama; `Ditolak` tidak dipakai di MVP | `USER-DECIDED` (2026-11-18) |
 | REC-05 | `tanggal_daftar` ditimpa saat reaktivasi | Pertahankan tanggal pertama, reaktivasi lewat `updated_at` | `USER-DECIDED` (2026-11-18) |
 | REC-06 | `is_active` akun vs `is_archived` profil tidak terhubung | Arsip profil mahasiswa menonaktifkan akun; `guru_dosen` memiliki flag archive | `USER-DECIDED` (2026-11-18) |
 | REC-12 | Kebijakan 403 vs 404 belum ditetapkan | 404 untuk resource milik pengguna lain; 403 untuk penolakan role | `USER-DECIDED` (2026-11-18) |
@@ -315,4 +315,6 @@ Catatan environment: fondasi Phase 2 dijalankan pada PHP 8.4.24 dan server datab
 
 Catatan implementasi Phase 3 (2026-11-18): `users.id_user` BIGINT UNSIGNED PK, `username` VARCHAR(50) unique, `role` ENUM(`mahasiswa`,`guru_dosen`,`admin`), `is_active` boolean; `mahasiswa.npm` VARCHAR(20) unique dan `guru_dosen.nip_guru` VARCHAR(30) unique, `nama_lengkap` VARCHAR(100). Panjang kolom adalah pilihan implementasi yang masih harus diaudit pada CP2, bukan keputusan final.
 
-Catatan implementasi Phase 4 (2026-11-18): `mata_kuliah.kode_mata_kuliah` VARCHAR(20) unique, `nama_mata_kuliah` VARCHAR(100), `guru_dosen_id` FK restrict-on-delete, flag `is_archived`/`tanggal_arsip`. `mahasiswa_mata_kuliah` memakai `tahun_akademik` VARCHAR(9), `semester` ENUM(`Ganjil`,`Genap`), `status` ENUM(`Terdaftar`,`Ditolak`,`Dibatalkan`,`Selesai`), unique `(id_mahasiswa, id_mata_kuliah, tahun_akademik, semester)`, dan FK restrict-on-delete. Enrollment baru selalu dibuat `Terdaftar`; transisi ke `Ditolak`/`Dibatalkan`/`Selesai` belum diimplementasikan karena REC-04/PRD-TBD-022 masih `OPEN`.
+Catatan implementasi Phase 5 (2026-11-18): `prioritas`, `status_tugas`, dan `status_belajar` diisi nilai baseline melalui migration dan `ReferenceDataSeeder` (idempotent). `tugas` memakai `judul_tugas` VARCHAR(150), `deskripsi` TEXT, `deadline` DATETIME wajib, `task_type` ENUM(`personal`,`academic`), serta FK restrict-on-delete untuk mata kuliah, prioritas, status, pembuat, dan pemilik. `aktivitas_belajar` memakai `judul_aktivitas` VARCHAR(150), `materi_belajar` TEXT, `waktu_mulai` DATETIME, `durasi_menit` SMALLINT UNSIGNED, `tanggal_dibuat` DATE, dan `id_mahasiswa` sesuai REC-02. `durasi_menit > 0` divalidasi di server.
+
+Catatan implementasi Phase 4 (2026-11-18): `mata_kuliah.kode_mata_kuliah` VARCHAR(20) unique, `nama_mata_kuliah` VARCHAR(100), `guru_dosen_id` FK restrict-on-delete, flag `is_archived`/`tanggal_arsip`. `mahasiswa_mata_kuliah` memakai `tahun_akademik` VARCHAR(9), `semester` ENUM(`Ganjil`,`Genap`), `status` ENUM(`Terdaftar`,`Ditolak`,`Dibatalkan`,`Selesai`), unique `(id_mahasiswa, id_mata_kuliah, tahun_akademik, semester)`, dan FK restrict-on-delete. Enrollment baru selalu dibuat `Terdaftar`; transisi `Terdaftar`→`Dibatalkan` dan `Terdaftar`→`Selesai` diimplementasikan, reaktivasi memakai baris periode yang sama, dan `Ditolak` tidak ditawarkan di MVP (REC-04). `users` mendapat kolom `must_change_password` boolean dan `temporary_password_expires_at` nullable untuk lifecycle temporary password 72 jam (`PRD-TBD-016`).
