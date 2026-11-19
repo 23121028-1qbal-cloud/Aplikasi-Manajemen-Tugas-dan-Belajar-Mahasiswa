@@ -93,42 +93,58 @@ serta tiga skenario pengujian ada di `docs/11_DEMO_DEPLOYMENT.md`.
 - Perubahan harus ditelusuri dari PRD → SRS → UI/UX/DB/Architecture → Test.
 - Dokumen tidak menyatakan implementasi telah tersedia. Dokumen menjelaskan target rancangan.
 
-## Keputusan terbuka penting
+## Gambaran proyek
 
-- Detail kebijakan pemilik/pengalihan tugas personal (`PRD-TBD-017`).
-- Kebijakan transfer ownership tugas personal (`PRD-TBD-017`).
-- Nilai target performa dan kapasitas (`PRD-TBD-020`).
-- Session lifetime dan kebijakan concurrent session (`PRD-TBD-019`).
-- Versi Nginx dan Ubuntu Server; versi aplikasi sudah ditetapkan pada REC-15.
-- Parameter final VM OCI dan ketersediaan kuota di region.
-- Finalisasi matriks concurrency per entitas/operasi.
-- Retensi audit log dan finalisasi ERD/DDL pada CP2.
+Aplikasi Manajemen Tugas dan Belajar Mahasiswa adalah aplikasi web berbasis Laravel Full-Stack untuk membantu mahasiswa, dosen/guru, dan administrator mengelola tugas akademik, mata kuliah, progres belajar, notifikasi, serta aktivitas pembelajaran dalam satu platform.
 
-## Status rekonsiliasi (2026-11-18)
+## Peran pengguna
 
-Audit repository menemukan konflik dan celah dokumentasi. Rekonsiliasi `REC-01` s.d. `REC-15` dicatat di `docs/06_DATABASE_DESIGN.md` §12 (database), `docs/08_API_SPECIFICATION.md` §10 (route), dan `docs/09_TESTING_STRATEGY.md` §13 (testing).
+- **Mahasiswa** — melihat tugas dan mata kuliah, memperbarui progres, mencatat aktivitas belajar, serta menerima notifikasi.
+- **Dosen/Guru** — mengelola mata kuliah, membuat dan mendistribusikan tugas, memantau progres, serta melakukan koreksi pasca-tutup sesuai aturan.
+- **Administrator** — mengelola akun dan enrollment, memantau data secara read-only, serta melakukan arsip dan restore akun.
 
-**Disetujui 2026-11-18 (`USER-DECIDED`):** seluruh REC-01 s.d. REC-15, `PRD-TBD-016`, `PRD-TBD-022`, `PRD-TBD-023`, dan `PRD-TBD-024`.
+## Fitur utama
 
-**Blocker Phase 4 dan Phase 7:** tidak ada lagi setelah keputusan 2026-11-19. Yang masih terbuka adalah keputusan non-blocker seperti session lifetime, target performa, dan parameter deployment. Implementasi tetap menunggu approval gate.
+- Autentikasi berbasis session dengan peran Mahasiswa, Dosen/Guru, dan Admin.
+- Manajemen mata kuliah, enrollment, tugas personal, dan tugas akademik.
+- Distribusi tugas akademik serta pembaruan progres mahasiswa yang idempotent.
+- Monitoring progres dosen dan rekap progres mata kuliah.
+- Aktivitas belajar mahasiswa beserta pengingat jadwal.
+- Notifikasi in-app untuk distribusi tugas, deadline H-1, dan aktivitas belajar.
+- Scheduler 15 menit, dedup notifikasi, cleanup retensi 90 hari, inbox, dan badge belum dibaca.
+- Arsip dan restore akun dengan guard aturan bisnis.
+- Optimistic locking pada resource yang berisiko konflik pembaruan.
+- Tema Light/Dark dan tampilan responsif untuk desktop serta mobile.
 
-## Rekonsiliasi dan keputusan 2026-11-19
+## Teknologi
 
-Rekonsiliasi ini menyelaraskan status yang sudah diputuskan dan menutup keputusan yang sebelumnya terbuka.
+- **Backend:** PHP 8.2+ dan Laravel 12
+- **Frontend:** Laravel Blade, Bootstrap 5, Bootstrap Icons, dan Vite
+- **Database:** MySQL untuk production; SQLite didukung untuk pengujian
+- **Pengujian:** PHPUnit, Playwright, dan pemeriksaan aksesibilitas axe WCAG A/AA
+- **Deployment target:** Nginx dan MySQL pada satu VM Oracle Cloud Infrastructure
 
-- Status REC-15 dan seluruh REC-01 s.d. REC-15 diseragamkan menjadi `USER-DECIDED`.
-- Sisa referensi `aktivitas_belajar.id_user` pada desain diselaraskan ke `id_mahasiswa` sesuai REC-02.
-- Temporary password 72 jam dan wajib ganti tidak lagi dicantumkan sebagai keputusan terbuka.
-- **Policy/Gate layer wajib** untuk otorisasi resource (`ARCH-011`, `SRS-AUTH-015`). Policy untuk seluruh resource utama sudah diimplementasikan dan di-wire ke controller.
-- **Arsip + restore akun** (`PRD-TBD-025`): arsip menonaktifkan akun; dosen hanya dapat diarsipkan tanpa mata kuliah non-arsip; restore tidak membackfill progres.
-- **Cakupan notifikasi MVP** (`PRD-TBD-018`): distribusi tugas akademik, deadline akademik H-1, dan aktivitas belajar 60 menit sebelum mulai; retensi 90 hari; tanpa preferensi; scheduler 15 menit.
-- **Progres pasca-close** (`PRD-TBD-021`): mahasiswa terkunci; dosen pengampu boleh koreksi dengan audit; tugas berarsip terkunci untuk semua.
-- Gap closure 2026-11-19 menyelesaikan Policy/Gate, arsip/restore akun, post-close lock, halaman appearance, rekap progres mata kuliah (`GD-07`), dashboard per role, default prioritas `Sedang`, dan reaktivasi `Ditolak`.
-- Phase 7 sudah diimplementasikan: notifikasi in-app, dedup per penerima, scheduler 15 menit, cleanup retensi 90 hari, inbox, dan badge belum dibaca.
-- Pengujian Phase 7 mencakup SQLite, MySQL 8.4.13, Playwright browser/E2E, dan axe WCAG A/AA.
-- Phase 8 (UI polish and compatibility) sudah diimplementasikan: tema Light/Dark, sidebar offcanvas responsif, dan perbaikan kontras pada seluruh halaman peran.
-- Audit axe WCAG A/AA per halaman (Light/Dark, desktop 1280px dan mobile 390px) tidak menemukan violation; smoke test kompatibilitas lulus di Chromium dan Firefox, sedangkan WebKit belum dapat dijalankan karena library host belum tersedia.
-- Optimasi query: dashboard mahasiswa kini eager-load `mataKuliah` (14 menjadi 13 query pada data audit); 134 test lulus pada SQLite dan MySQL 8.4.13.
+## Status implementasi
+
+Baseline dokumentasi saat ini berada pada **versi 1.10.0**. Fase implementasi sampai Phase 8 telah dicatat dalam dokumentasi, termasuk Policy/Gate, arsip/restore akun, post-close lock, notifikasi in-app, appearance, dan dashboard per peran.
+
+> Status implementasi pada dokumentasi tidak menggantikan verifikasi langsung terhadap source code dan proses deployment.
+
+## Pengujian
+
+Berdasarkan audit proyek:
+
+- **134 pengujian** lulus pada SQLite dan MySQL 8.4.13.
+- Pengujian browser/E2E mencakup Playwright.
+- Pemeriksaan axe WCAG A/AA dilaporkan tanpa violation pada halaman yang diaudit.
+- Smoke test lulus pada Chromium dan Firefox.
+
+Jalankan pengujian dengan:
+
+```bash
+php artisan test
+npm run build
+```
 
 ## Riwayat versi dokumentasi
 
