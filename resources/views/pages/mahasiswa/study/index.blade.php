@@ -18,7 +18,7 @@
                 <input type="search" id="q" name="q" value="{{ $filters['q'] ?? '' }}" class="form-control form-control-sm">
             </div>
 
-            <div class="col-8 col-md-4">
+            <div class="col-12 col-sm-8 col-md-4">
                 <label for="id_status_belajar" class="form-label">Status</label>
                 <select id="id_status_belajar" name="id_status_belajar" class="form-select form-select-sm">
                     <option value="">Semua status</option>
@@ -30,7 +30,7 @@
                 </select>
             </div>
 
-            <div class="col-4 col-md-3 d-flex gap-2">
+            <div class="col-12 col-sm-4 col-md-3 d-flex flex-wrap gap-2">
                 <button type="submit" class="btn btn-sm btn-outline-secondary flex-grow-1">Terapkan</button>
                 <a href="{{ route('mahasiswa.study-activities.index') }}" class="btn btn-sm btn-outline-secondary">Reset</a>
             </div>

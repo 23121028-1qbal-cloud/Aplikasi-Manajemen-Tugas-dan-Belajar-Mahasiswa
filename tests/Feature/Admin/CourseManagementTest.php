@@ -53,6 +53,29 @@ class CourseManagementTest extends TestCase
         $this->assertSame(1, MataKuliah::where('kode_mata_kuliah', 'IF101')->count());
     }
 
+    public function test_archived_lecturer_cannot_be_assigned_new_course(): void
+    {
+        $lecturer = GuruDosen::factory()->create(['is_archived' => true, 'tanggal_arsip' => now()]);
+
+        $this->actingAs($this->admin())->post('/admin/courses', [
+            'kode_mata_kuliah' => 'IF102',
+            'nama_mata_kuliah' => 'Struktur Data',
+            'guru_dosen_id' => $lecturer->id_guru_dosen,
+        ])->assertSessionHasErrors('guru_dosen_id');
+
+        $this->assertDatabaseMissing('mata_kuliah', ['kode_mata_kuliah' => 'IF102']);
+    }
+
+    public function test_admin_can_open_course_edit_form(): void
+    {
+        $course = MataKuliah::factory()->create(['nama_mata_kuliah' => 'Nama Form']);
+
+        $this->actingAs($this->admin())
+            ->get(route('admin.courses.edit', $course))
+            ->assertOk()
+            ->assertSee('Nama Form');
+    }
+
     public function test_admin_can_update_course_and_reassign_lecturer(): void
     {
         $course = MataKuliah::factory()->create();

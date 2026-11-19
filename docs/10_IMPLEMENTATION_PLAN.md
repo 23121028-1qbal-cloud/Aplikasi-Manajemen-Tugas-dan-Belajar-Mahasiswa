@@ -3,7 +3,7 @@
 | Metadata | Value |
 |---|---|
 | Document ID | DOC-10 |
-| Version | 1.5.0 |
+| Version | 1.7.0 |
 | Status | Draft |
 | Strategy | Incremental Laravel Full-Stack delivery |
 
@@ -46,6 +46,9 @@ Tasks:
 - finalize personal-task ownership policy;
 - finalize notification schedule/preferences;
 - finalize DB schema, archive behavior, and concurrency matrix;
+- finalize archive workflow for `mahasiswa`/`guru_dosen`;
+- finalize notification scope, lead times, timezone, retention, and deduplication;
+- finalize post-closure academic progress policy;
 - set numeric NFR targets.
 
 Deliverables:
@@ -86,7 +89,7 @@ Tasks:
 - Admin bootstrap;
 - lecturer account provisioning;
 - temporary password workflow;
-- policies and role middleware.
+- **Policy/Gate layer wajib** (`ARCH-011`, `USER-DECIDED` 2026-11-19) dan role middleware.
 
 Deliverables:
 - tested auth journeys;
@@ -98,6 +101,7 @@ Exit gate:
 ### Phase 4 — Master data and enrollment
 Tasks:
 - student and lecturer profile management;
+- student/lecturer archive and restore (`PRD-TBD-025`);
 - course CRUD/archive;
 - course-to-lecturer assignment;
 - enrollment create/reactivate/cancel/complete;
@@ -130,7 +134,7 @@ Tasks:
 - distribution at creation;
 - late enrollment distribution;
 - idempotency;
-- progress update;
+- progress update dengan lock setelah close (`PRD-TBD-021`);
 - lecturer monitoring and correction;
 - Admin read-only monitoring.
 
@@ -145,10 +149,12 @@ Exit gate:
 Tasks:
 - notification persistence and inbox;
 - unread/read state;
-- deduplication;
-- Laravel Scheduler;
+- deduplication unique `(id_user, dedup_key)`;
+- trigger distribusi tugas akademik, deadline akademik H-1, dan aktivitas belajar 60 menit sebelum mulai;
+- Laravel Scheduler setiap 15 menit;
+- cleanup retensi 90 hari;
 - dashboard summaries;
-- notification settings only if approved.
+- no per-user notification settings (`PRD-TBD-018`).
 
 Deliverables:
 - web notifications;
@@ -232,7 +238,7 @@ No code or schema migration should cross a checkpoint that requires explicit app
 | Admin privilege overreach | Privacy breach | Dedicated monitoring query and negative tests |
 | Duplicate progress | Incorrect task state | Unique key, transaction, idempotent insert |
 | Concurrent enrollment/distribution | Missing/duplicate progress | Race tests and transaction design |
-| Temporary password exposure | Account compromise | One-time display, expiry/forced change policy TBD, no logging |
+| Temporary password exposure | Account compromise | One-time display, expiry 72 jam + forced change, no logging |
 | Single VM failure | Service outage | External backup and tested restore |
 | ARM64 dependency incompatibility | Deployment failure | Verify PHP extensions and dependencies before provisioning |
 | Scheduler not running | Missed reminders | Health checks and operational monitoring |
@@ -269,11 +275,16 @@ MVP release requires:
 |---|---|---|---|
 | 2026-11-18 | Phase 0 — audit | Repository hanya berisi dokumentasi (tanpa kode, tanpa git). PHP 8.4.24, Composer 2.10.3, Node 20.20.2, MariaDB 11.8.5 lokal. | Menunggu persetujuan temuan |
 | 2026-11-18 | Phase 1 — rekonsiliasi | Seluruh REC-01 s.d. REC-15 dan PRD-TBD-016/022/023/024 disetujui (`USER-DECIDED`). | Disetujui |
-| 2026-11-18 | Phase 3 — auth | Registrasi mahasiswa, login/logout session, rate limit login, cek akun aktif, middleware role, perubahan password, bootstrap admin via Artisan, provisioning dosen + temporary password sekali tampil. 32 test lulus (110 assertion). | Baseline lulus, menunggu review |
-| 2026-11-18 | Phase 4 — master data | Mata kuliah (CRUD, arsip, penugasan dosen), enrollment (create/reactivate/status transition, unique periode), akun mahasiswa dan dosen oleh Admin (daftar, detail, nama, status, temporary password), daftar mata kuliah untuk dosen dan mahasiswa. | Selesai |
+| 2026-11-18 | Phase 3 — auth | Registrasi mahasiswa, login/logout session, rate limit login, cek akun aktif, middleware role, perubahan password, bootstrap admin via Artisan, provisioning dosen + temporary password sekali tampil. 32 test lulus (110 assertion). Policy/Gate belum ada. | Baseline lulus; Policy/Gate masuk gap closure |
+| 2026-11-18 | Phase 4 — master data | Mata kuliah (CRUD, arsip, penugasan dosen), enrollment (create/reactivate/status transition, unique periode), akun mahasiswa dan dosen oleh Admin (daftar, detail, nama, status, temporary password), daftar mata kuliah untuk dosen dan mahasiswa. Arsip/restore akun belum ada. | Selesai sebagian; arsip/restore masuk gap closure |
 | 2026-11-18 | Konflik edit & mata kuliah dosen | `row_version` pada tugas, aktivitas belajar, dan mata kuliah; dosen dapat mengubah nama mata kuliah yang diampu; konflik ditolak dengan pesan dan input lama dipertahankan. | Selesai |
 | 2026-11-18 | Phase 5 — tugas personal & belajar | Tugas personal CRUD/arsip/riwayat, aktivitas belajar CRUD/arsip/riwayat, filter dan pagination, scoping kepemilikan, modal konfirmasi arsip. 74 test lulus (275 assertion). | Baseline lulus, menunggu review |
-| 2026-11-19 | Phase 6 — tugas akademik & progres | Definisi tugas akademik (create/edit/close), distribusi progres idempotent saat pembuatan dan late enrollment, progres mahasiswa, koreksi dosen dengan pencatatan aktor, monitoring Admin read-only, optimistic locking pada definisi dan progres. Uji paralel dua request: satu berhasil, satu menerima konflik tanpa menimpa data. 95 test lulus (371 assertion). | Selesai |
-| 2026-11-18 | Phase 2 — foundation | Laravel 12.73.0 (PHP 8.4.24) + Bootstrap 5.3.9 + Bootstrap Icons 1.13.2 via Vite; layout guest/app dengan sidebar + offcanvas; token light/dark; 4 test baseline lulus. Versi berstatus `PROPOSED` (REC-15). | Baseline lulus, menunggu review |
+| 2026-11-19 | Phase 6 — tugas akademik & progres | Definisi tugas akademik (create/edit/close), distribusi progres idempotent saat pembuatan dan late enrollment, progres mahasiswa, koreksi dosen dengan pencatatan aktor, monitoring Admin read-only, optimistic locking pada definisi dan progres. Uji paralel dua request: satu berhasil, satu menerima konflik tanpa menimpa data. Post-close lock dan lock tugas berarsip sudah diterapkan. | Selesai |
+| 2026-11-19 | Rekonsiliasi dokumen | Menyelaraskan status REC yang sudah diputuskan, memperbaiki sisa referensi `aktivitas_belajar.id_user`, mencatat kewajiban Policy/Gate, dan menandai gap Phase 7. Tidak ada perubahan kode. | Selesai |
+| 2026-11-19 | Penutupan keputusan | Menyetujui arsip/restore (`PRD-TBD-025`), cakupan notifikasi (`PRD-TBD-018`), progres pasca-close (`PRD-TBD-021`), dan Policy/Gate wajib (`ARCH-011`). | Disetujui |
+| 2026-11-19 | Gap closure | Policy/Gate untuk seluruh resource utama, arsip/restore akun, post-close lock, appearance, GD-07, dashboard per role, default prioritas `Sedang`, guard enrollment/distribusi untuk akun berarsip, dan reaktivasi `Ditolak`. 122 test lulus (507 assertion). | Selesai |
+| 2026-11-19 | Phase 8 — UI polish & compatibility | Kontras Light/Dark seluruh halaman peran, tabel dan tombol outline bertema, label input disabled, filter mobile, dan perbaikan overflow halaman progres tugas akademik. Bug `orWhereKey` pada form edit mata kuliah diperbaiki dan diberi regression test. Eager-load `mataKuliah` di dashboard mahasiswa (14→13 query). Audit axe WCAG A/AA per halaman 0 violation; smoke test Chromium + Firefox lulus; WebKit tertunda karena library host. 134 test lulus pada SQLite dan MySQL 8.4.13. | Selesai (WebKit menunggu host library) |
+| 2026-11-19 | Phase 7 — notifikasi & dashboard | Notifikasi in-app untuk distribusi akademik, deadline H-1, dan aktivitas belajar 60 menit sebelum mulai; dedup `(id_user, dedup_key)`; scheduler 15 menit; cleanup 90 hari; inbox dan badge unread; dashboard per role. 132 test lulus pada SQLite dan MySQL 8.4.13; Playwright browser/E2E dan axe WCAG A/AA lulus. | Selesai |
+| 2026-11-18 | Phase 2 — foundation | Laravel 12.73.0 (PHP 8.4.24) + Bootstrap 5.3.9 + Bootstrap Icons 1.13.2 via Vite; layout guest/app dengan sidebar + offcanvas; token light/dark; 4 test baseline lulus. Versi mengikuti REC-15 (`USER-DECIDED`). | Baseline lulus, menunggu review |
 
 Catatan: Phase 2 tidak membuat tabel domain. Migration bawaan framework hanya dipakai untuk memverifikasi koneksi database pengembangan dan tetap akan direkonsiliasi pada CP2. Deployment produksi, migration final, dan keputusan schema tetap memerlukan persetujuan eksplisit.

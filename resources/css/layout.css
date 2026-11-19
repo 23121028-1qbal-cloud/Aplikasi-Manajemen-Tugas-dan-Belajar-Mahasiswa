@@ -1,7 +1,12 @@
+html {
+    overflow-x: clip;
+}
+
 body {
     min-height: 100vh;
     background-color: var(--app-bg);
     color: var(--text-primary);
+    overflow-x: clip;
 }
 
 .app-shell {
@@ -48,6 +53,10 @@ body {
     color: var(--primary);
     background-color: var(--surface-muted);
     font-weight: 600;
+}
+
+[data-theme='dark'] .app-sidebar .nav-link.active {
+    color: #93c5fd;
 }
 
 .app-sidebar .nav-heading {

@@ -22,6 +22,83 @@
     background-color: var(--surface-muted);
 }
 
+.min-w-0 {
+    min-width: 0;
+}
+
+a {
+    color: var(--primary);
+}
+
+a:hover {
+    color: var(--primary);
+}
+
+.table {
+    --bs-table-color: var(--text-primary);
+    --bs-table-bg: transparent;
+    --bs-table-border-color: var(--border);
+    --bs-table-striped-color: var(--text-primary);
+    --bs-table-striped-bg: var(--surface-muted);
+    --bs-table-hover-color: var(--text-primary);
+    --bs-table-hover-bg: var(--surface-muted);
+}
+
+.btn-outline-primary {
+    --bs-btn-color: var(--primary);
+    --bs-btn-border-color: var(--primary);
+    --bs-btn-hover-color: var(--surface);
+    --bs-btn-hover-bg: var(--primary);
+    --bs-btn-hover-border-color: var(--primary);
+    --bs-btn-active-color: var(--surface);
+    --bs-btn-active-bg: var(--primary);
+    --bs-btn-active-border-color: var(--primary);
+}
+
+.btn-outline-secondary {
+    --bs-btn-color: var(--text-secondary);
+    --bs-btn-border-color: var(--border);
+    --bs-btn-hover-color: var(--text-primary);
+    --bs-btn-hover-bg: var(--surface-muted);
+    --bs-btn-hover-border-color: var(--border);
+    --bs-btn-active-color: var(--text-primary);
+    --bs-btn-active-bg: var(--surface-muted);
+    --bs-btn-active-border-color: var(--border);
+}
+
+.btn-outline-danger {
+    --bs-btn-color: var(--danger);
+    --bs-btn-border-color: var(--danger);
+    --bs-btn-hover-color: var(--surface);
+    --bs-btn-hover-bg: var(--danger);
+    --bs-btn-hover-border-color: var(--danger);
+    --bs-btn-active-color: var(--surface);
+    --bs-btn-active-bg: var(--danger);
+    --bs-btn-active-border-color: var(--danger);
+}
+
+.btn-outline-success {
+    --bs-btn-color: var(--success);
+    --bs-btn-border-color: var(--success);
+    --bs-btn-hover-color: var(--surface);
+    --bs-btn-hover-bg: var(--success);
+    --bs-btn-hover-border-color: var(--success);
+    --bs-btn-active-color: var(--surface);
+    --bs-btn-active-bg: var(--success);
+    --bs-btn-active-border-color: var(--success);
+}
+
+.btn-outline-dark {
+    --bs-btn-color: var(--text-primary);
+    --bs-btn-border-color: var(--border);
+    --bs-btn-hover-color: var(--text-primary);
+    --bs-btn-hover-bg: var(--surface-muted);
+    --bs-btn-hover-border-color: var(--border);
+    --bs-btn-active-color: var(--text-primary);
+    --bs-btn-active-bg: var(--surface-muted);
+    --bs-btn-active-border-color: var(--border);
+}
+
 [data-theme='dark'] .app-card {
     box-shadow: inset 0 1px 0 rgb(255 255 255 / 4%);
 }

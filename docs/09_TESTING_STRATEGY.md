@@ -3,7 +3,7 @@
 | Metadata | Value |
 |---|---|
 | Document ID | DOC-09 |
-| Version | 1.3.0 |
+| Version | 1.5.0 |
 | Status | Draft |
 | Target | Laravel Web Application |
 
@@ -63,6 +63,7 @@ Testing validates product behavior, authorization, data integrity, responsive UX
 | T-AUTH-05 | Logout then revisit protected page | Session no longer grants access | AUTH-005/006 |
 | T-AUTH-06 | Inactive account login | Denied | AUTH-013 |
 | T-AUTH-07 | Admin issues temporary password | Protected operation succeeds and is audited safely | AUTH-010 |
+| T-AUTH-09 | Direct request to a resource without the required Policy/Gate permission | Denied server-side; no reliance on hidden navigation | AUTH-007/015 |
 | T-TASK-01 | Student creates personal task | Own task saved | TASK-001 |
 | T-TASK-02 | Student accesses another student's task | Denied/not disclosed | TASK-010 |
 | T-TASK-03 | Personal task without course | Accepted | TASK-006 |
@@ -80,6 +81,9 @@ Testing validates product behavior, authorization, data integrity, responsive UX
 | T-ACAD-10 | Student updates another student's progress | Denied | ACAD-010 |
 | T-ACAD-11 | Lecturer corrects progress in own course | Update and actor recorded | ACAD-012 |
 | T-ACAD-12 | Admin attempts progress mutation | Denied | ACAD-013 |
+| T-ACAD-13 | Student updates progress after task is closed | Denied; progress unchanged | ACAD-019 |
+| T-ACAD-14 | Lecturer corrects progress after task is closed | Allowed; actor recorded | ACAD-019 |
+| T-ACAD-15 | Student or lecturer updates progress on archived task | Denied for both roles | ACAD-019 |
 | T-STUDY-01 | Student creates activity with positive duration | Saved | STUDY-001/006 |
 | T-STUDY-02 | Duration zero or negative | Rejected | STUDY-006 |
 | T-STUDY-03 | Lecturer/Admin attempts to view private activity | Denied | STUDY-009 |
@@ -90,9 +94,18 @@ Testing validates product behavior, authorization, data integrity, responsive UX
 | T-NOTIF-01 | User opens own notification list | Own notifications only | NOTIF-002 |
 | T-NOTIF-02 | User marks another user's notification read | Denied | NOTIF-002/003 |
 | T-NOTIF-03 | Same event processed twice | One notification per recipient | NOTIF-005 |
+| T-NOTIF-04 | Academic task distributed to three students | Three notifications; reprocessing adds none | NOTIF-005 |
+| T-NOTIF-05 | Cleanup runs with notifications older than 90 days | Only rows older than 90 days are removed | NOTIF-008 |
+| T-NOTIF-06 | Personal task deadline passes | No personal deadline notification is created | NOTIF-007 |
+| T-NOTIF-07 | Academic task deadline is H-1 | One notification per unfinished progress; none for `Selesai`, closed, or archived task | NOTIF-007 |
+| T-NOTIF-08 | Study activity starts in 60 minutes | One notification for `Direncanakan`; none for `Selesai` or archived | NOTIF-007 |
+| T-NOTIF-09 | Notification recipient is inactive or archived | No new notification is created | NOTIF-010 |
 | T-ARCH-01 | Course archived | New distribution blocked; history retained | ARCH-002/004 |
-| T-ARCH-02 | Student archived | New distribution blocked; history retained | ARCH-002/005 |
+| T-ARCH-02 | Student archived | Login blocked; new distribution blocked; history retained | ARCH-002/005/006 |
 | T-ARCH-03 | Hard delete parent with history | Restricted | ARCH-003 |
+| T-ARCH-04 | Restore archived student | Account active; no backfill of missed progress | ARCH-006 |
+| T-ARCH-05 | Archive lecturer with a non-archived course | Rejected; lecturer remains active | ARCH-007 |
+| T-ARCH-06 | Archive and restore lecturer without active courses | Archive deactivates; restore reactivates | ARCH-006/007 |
 
 ## 5. Authorization test matrix
 
@@ -105,6 +118,8 @@ Every protected resource must test:
 - archived/closed resource conditions;
 - direct URL access bypassing navigation;
 - forged IDs in form payload.
+
+Setiap resource terlindungi wajib memiliki Policy/Gate yang diuji langsung, bukan hanya melalui tampilan atau middleware role (`SRS-AUTH-015`, `ARCH-011`). Test harus membuktikan Policy menolak aktor yang tidak berhak meskipun route dan ID valid.
 
 ## 6. Concurrency and race-condition tests
 
@@ -196,14 +211,24 @@ A feature is complete only when:
 
 ## 12. Open testing decisions
 
-- E2E framework.
 - Numeric performance targets.
-- Exact browser versions.
-- Accessibility audit tooling.
+- Browser matrix final: Chromium/Chrome dan Firefox sudah diuji; WebKit/Safari menunggu host library tersedia.
+- Perluasan audit ke halaman AJAX/streaming bila ada.
+
+Sudah diputuskan:
+- E2E framework: Playwright (`@playwright/test`).
+- Accessibility audit tooling: axe-core dengan tag `wcag2a` dan `wcag2aa`.
 - Backup restore frequency.
 - Production smoke test and rollback owner.
+- Strategi pengujian MySQL 8.4; test suite saat ini memakai SQLite in-memory.
 
 ## 13. Rekonsiliasi pengujian (2026-11-18)
+
+Keputusan 2026-11-19 menambahkan cakupan test berikut:
+- `T-ACAD-13` s.d. `T-ACAD-15` untuk kebijakan pasca-close dan arsip.
+- `T-NOTIF-04` s.d. `T-NOTIF-09` untuk dedup multi-penerima, retensi 90 hari, trigger deadline/aktivitas, dan pengecualian pengguna nonaktif.
+- `T-ARCH-04` s.d. `T-ARCH-06` untuk restore tanpa backfill dan larangan arsip dosen dengan mata kuliah aktif.
+- Test Policy/Gate langsung untuk setiap resource (`T-AUTH-09`).
 
 | ID | Dampak pada test | Test tambahan (disetujui) |
 |---|---|---|
@@ -217,3 +242,7 @@ A feature is complete only when:
 | REC-15 | Versi runtime | Catat versi aktual pada laporan test; jangan klaim kompatibilitas MySQL sebelum diuji |
 
 Test baseline Phase 2 mencakup boot aplikasi, render layout guest/authenticated, dan build aset. Test domain dijalankan bertahap sesuai fase; Phase 3 mencakup registrasi, login/logout, pembatasan role, bootstrap admin, provisioning dosen, dan temporary password.
+
+Status 2026-11-19 (Phase 8): 134 test lulus (561 assertion) pada SQLite in-memory dan MySQL 8.4.13. Audit Playwright + axe-core menjangkau seluruh halaman utama ketiga peran pada Light/Dark, desktop 1280px, dan mobile 390px dengan **0 violation** setelah perbaikan kontras tabel/tombol outline, label input disabled, filter mobile, dan verifikasi overflow nyata (bukan `documentElement.scrollWidth` yang ikut menghitung tabel di dalam `.table-responsive`). Smoke test kompatibilitas (render halaman, offcanvas mobile, focus dan Escape, persistensi tema) lulus di Chromium dan Firefox; WebKit tidak dapat dijalankan karena `libicu74`, `libjpeg-turbo8`, dan `libjxl0.8` belum tersedia di host. Pengukuran query halaman utama berkisar 6–17 query tanpa N+1; dashboard mahasiswa diperbaiki dari 14 menjadi 13 query untuk satu tugas ber-mata-kuliah.
+
+Status 2026-11-19 (Phase 7): 132 test lulus (555 assertion) pada SQLite in-memory dan MySQL 8.4.13. Policy/Gate (`T-AUTH-09`), arsip/restore, post-close lock, appearance, GD-07, dashboard per role, serta `T-NOTIF-01` s.d. `T-NOTIF-09` sudah diuji. Scheduler diverifikasi melalui command dan `schedule:list`. Browser/E2E Playwright (distribusi tugas → notifikasi mahasiswa → mark read, mobile viewport, Light/Dark) lulus; axe WCAG A/AA tidak menemukan violation pada halaman login dan inbox Light/Dark setelah perbaikan kontras. Test Safari/Firefox dan audit accessibility menyeluruh per halaman belum dijalankan.
