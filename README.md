@@ -33,7 +33,10 @@ project/
     ├── 08_API_SPECIFICATION.md
     ├── 09_TESTING_STRATEGY.md
     ├── 10_IMPLEMENTATION_PLAN.md
-    └── 11_DEMO_DEPLOYMENT.md
+    ├── 11_DEMO_DEPLOYMENT.md
+    ├── 12_AI_PROMPT_LOG.md
+    ├── 13_TECHNICAL_REPORT.md
+    └── 14_SCREENSHOT_CHECKLIST.md
 ```
 
 ## Urutan membaca
@@ -50,6 +53,9 @@ project/
 10. `09_TESTING_STRATEGY.md` — strategi verifikasi.
 11. `10_IMPLEMENTATION_PLAN.md` — urutan pekerjaan dan gerbang persetujuan.
 12. `11_DEMO_DEPLOYMENT.md` — cara menjalankan aplikasi dan mengeksposnya lewat ngrok untuk demo.
+13. `12_AI_PROMPT_LOG.md` — log prompt AI, hasil analisis, dan verifikasi mandiri.
+14. `13_TECHNICAL_REPORT.md` — laporan teknis (siap konversi ke PDF).
+15. `14_SCREENSHOT_CHECKLIST.md` — daftar screenshot bukti tugas.
 
 ## Menjalankan aplikasi (demo)
 
