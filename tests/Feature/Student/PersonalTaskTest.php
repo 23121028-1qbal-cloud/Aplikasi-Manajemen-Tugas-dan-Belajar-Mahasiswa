@@ -49,6 +49,18 @@ class PersonalTaskTest extends TestCase
         $this->assertFalse($task->is_archived);
     }
 
+    public function test_create_form_preselects_default_priority(): void
+    {
+        $student = $this->student();
+        $sedang = Prioritas::query()->where('nama_prioritas', 'Sedang')->value('id_prioritas');
+
+        $this->actingAs($student->user)
+            ->get('/mahasiswa/tasks/personal/create')
+            ->assertOk()
+            ->assertViewHas('defaultPriorityId', $sedang)
+            ->assertSee('value="'.$sedang.'" selected', false);
+    }
+
     public function test_task_rejects_invalid_reference_values(): void
     {
         $student = $this->student();

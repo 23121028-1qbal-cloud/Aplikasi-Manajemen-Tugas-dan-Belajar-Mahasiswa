@@ -123,4 +123,17 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Trusted Proxies
+    |--------------------------------------------------------------------------
+    |
+    | Daftar alamat proxy yang dipercaya saat aplikasi berjalan di belakang
+    | reverse proxy atau tunnel HTTPS (mis. ngrok atau Nginx). Gunakan "*"
+    | hanya untuk lingkungan demo lokal. Dibaca oleh AppServiceProvider.
+    |
+    */
+
+    'trusted_proxies' => env('TRUSTED_PROXIES'),
+
 ];

@@ -135,3 +135,4 @@ Route::middleware('auth')->group(function () {
             ->name('admin.lecturers.temporary-password');
     });
 });
+

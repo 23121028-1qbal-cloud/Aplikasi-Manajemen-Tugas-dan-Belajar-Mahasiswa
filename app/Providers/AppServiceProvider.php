@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Support\RoleHome;
 use Illuminate\Auth\Middleware\RedirectIfAuthenticated;
+use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\ServiceProvider;
@@ -23,6 +24,21 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Proxy dipercaya hanya bila dikonfigurasi eksplisit (mis. tunnel ngrok
+        // atau Nginx). Tanpa ini, header X-Forwarded-* diabaikan sehingga URL
+        // aset dan redirect tetap memakai skema http di balik HTTPS.
+        // Konfigurasi harus dibaca di sini karena bootstrap/app.php berjalan
+        // sebelum .env dimuat, sehingga env()/config() belum tersedia.
+        $trustedProxies = config('app.trusted_proxies');
+
+        if (filled($trustedProxies)) {
+            TrustProxies::at(
+                $trustedProxies === '*'
+                    ? '*'
+                    : array_map('trim', explode(',', (string) $trustedProxies))
+            );
+        }
+
         Paginator::useBootstrapFive();
 
         // Pengguna yang sudah login tidak boleh kembali ke halaman guest;

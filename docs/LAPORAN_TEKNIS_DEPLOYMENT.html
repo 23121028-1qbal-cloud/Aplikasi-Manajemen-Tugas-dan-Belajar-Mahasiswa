@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Laporan Teknis Deployment Aplikasi Laravel</title>
+<style>
+@page { size: A4; margin: 14mm; }
+body { font-family: Arial, Helvetica, sans-serif; color: #1f2937; font-size: 11pt; line-height: 1.42; margin: 0; }
+h1 { font-size: 24pt; color: #14532d; margin: 5mm 0 3mm; }
+h2 { font-size: 17pt; color: #166534; border-bottom: 2px solid #86efac; padding-bottom: 2mm; margin-top: 8mm; page-break-after: avoid; }
+h3 { font-size: 13pt; color: #1d4ed8; margin-top: 5mm; page-break-after: avoid; }
+p { margin: 2mm 0; }
+ul, ol { margin-top: 2mm; }
+code { background: #f1f5f9; padding: 1px 4px; border-radius: 3px; }
+table { border-collapse: collapse; width: 100%; margin: 3mm 0; font-size: 9.5pt; }
+th, td { border: 1px solid #94a3b8; padding: 6px; vertical-align: top; }
+th { background: #dcfce7; }
+.cover { min-height: 250mm; display: flex; flex-direction: column; justify-content: center; text-align: center; page-break-after: always; }
+.cover h1 { font-size: 30pt; }
+.cover .meta { margin-top: 15mm; font-size: 13pt; }
+.section { page-break-before: always; }
+.no-break { page-break-before: always; }
+.figure { text-align: center; margin: 5mm 0 7mm; page-break-inside: avoid; }
+.figure img { max-width: 170mm; max-height: 118mm; object-fit: contain; border: 1px solid #cbd5e1; box-shadow: 0 2px 5px #94a3b8; }
+.figure.small img { max-width: 130mm; }
+.figure.mobile img { max-width: 80mm; max-height: 145mm; }
+.caption { font-size: 9pt; color: #475569; margin-top: 2mm; }
+.status { background: #ecfdf5; border-left: 5px solid #22c55e; padding: 3mm; }
+.warning { background: #fff7ed; border-left: 5px solid #f97316; padding: 3mm; }
+.mermaid-placeholder { text-align: center; border: 2px solid #94a3b8; padding: 8mm; background: #f8fafc; }
+.break { page-break-before: always; }
+.footer-note { font-size: 8.5pt; color: #64748b; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <p><strong>LAPORAN TEKNIS DAN BUKTI DEPLOYMENT</strong></p>
+  <h1>Aplikasi Manajemen Tugas dan Belajar Mahasiswa</h1>
+  <p class="meta">
+    <strong>Platform:</strong> Laravel 12 Full-Stack — Blade — Bootstrap 5<br>
+    <strong>Database:</strong> MySQL 8.4.13<br>
+    <strong>Deployment:</strong> Simulasi lokal dengan HTTPS Ngrok<br>
+    <strong>Tanggal:</strong> 19 November 2026
+  </p>
+  <p style="margin-top:25mm">URL demo: <code>https://stroller-dowry-expulsion.ngrok-free.dev</code></p>
+  <p class="footer-note">Tautan demo bergantung pada server Laravel dan proses tunnel Ngrok yang masih aktif.</p>
+</div>
+
+<h2>1. Ringkasan Eksekutif</h2>
+<p>Aplikasi ini mendukung tiga role: <strong>Mahasiswa</strong>, <strong>Guru/Dosen</strong>, dan <strong>Admin</strong>. Fitur utama meliputi autentikasi berbasis session, pengelolaan tugas personal, aktivitas belajar, tugas akademik dan progres, enrollment, mata kuliah, notifikasi in-app, dashboard, serta tema Light/Dark.</p>
+<div class="status"><strong>Status verifikasi:</strong> aplikasi berjalan melalui Laravel local server; Ngrok menyediakan akses HTTPS; Playwright berhasil mengambil seluruh screenshot; dan 135 test otomatis lulus dengan 564 assertion pada 19 November 2026.</div>
+
+<h2>2. Informasi Implementasi</h2>
+<table>
+<tr><th>Komponen</th><th>Teknologi atau Hasil</th></tr>
+<tr><td>Framework</td><td>Laravel 12.73.0</td></tr>
+<tr><td>Bahasa runtime</td><td>PHP 8.4.24</td></tr>
+<tr><td>Frontend</td><td>Laravel Blade, Bootstrap 5.3.9, Bootstrap Icons 5.3.9, Vite</td></tr>
+<tr><td>Database</td><td>MySQL 8.4.13</td></tr>
+<tr><td>Autentikasi</td><td>Laravel Session Authentication</td></tr>
+<tr><td>Browser automation</td><td>Playwright dengan Chromium</td></tr>
+<tr><td>Deployment</td><td>Laravel <code>php artisan serve</code> pada port 8000 + Ngrok HTTPS</td></tr>
+</table>
+
+<h2>3. Arsitektur Sistem</h2>
+<div class="mermaid-placeholder">
+  Browser → Ngrok HTTPS → Laravel Web Routes → Middleware / Policy<br>
+  → Controller → Form Request / Service → Eloquent → MySQL
+</div>
+<h3>Alur deployment simulasi</h3>
+<ol>
+<li>Menjalankan aplikasi Laravel lokal pada port 8000.</li>
+<li>Menjalankan Ngrok untuk meneruskan trafik HTTPS ke localhost.</li>
+<li>Laravel memproses session, CSRF, middleware role, policy, dan request aplikasi.</li>
+<li>Data dibaca atau ditulis melalui Eloquent ke MySQL.</li>
+<li>Playwright mengakses halaman melalui domain Ngrok dan mengambil screenshot.</li>
+</ol>
+
+<h2>4. Konfigurasi Database dan Environment</h2>
+<table>
+<tr><th>Pengaturan</th><th>Nilai/Kondisi</th></tr>
+<tr><td>Database</td><td><code>db_manajemen_akademik</code></td></tr>
+<tr><td>Driver</td><td><code>mysql</code></td></tr>
+<tr><td>Host/Port</td><td><code>127.0.0.1:3308</code> pada lingkungan uji</td></tr>
+<tr><td>Session</td><td><code>database</code></td></tr>
+<tr><td>Cookie sesi</td><td><code>Secure=true</code>, <code>HttpOnly=true</code>, <code>SameSite=Lax</code></td></tr>
+<tr><td>Proxy demo</td><td><code>TRUSTED_PROXIES=*</code> (hanya untuk simulasi Ngrok)</td></tr>
+<tr><td>Scheduler</td><td><code>notifications:dispatch</code> setiap 15 menit; cleanup harian pukul 02:00 WIB</td></tr>
+</table>
+
+<h2>5. Keamanan</h2>
+<ul>
+<li><strong>Autentikasi:</strong> password di-hash dengan fasilitas Laravel; login menggunakan username dan password.</li>
+<li><strong>Otorisasi:</strong> middleware role serta Policy/Gate untuk resource utama.</li>
+<li><strong>CSRF:</strong> semua form mutasi dilindungi token CSRF.</li>
+<li><strong>Rate limit login:</strong> lima percobaan gagal per menit.</li>
+<li><strong>Akun nonaktif:</strong> ditolak dan sesi yang aktif dihentikan.</li>
+<li><strong>Password sementara:</strong> kedaluwarsa 72 jam dan wajib rotasi.</li>
+<li><strong>Cookie:</strong> hasil Playwright membuktikan cookie sesi bertanda <code>Secure</code>, <code>HttpOnly</code>, dan <code>SameSite=Lax</code>.</li>
+<li><strong>Optimistic locking:</strong> <code>row_version</code> pada resource yang ditentukan.</li>
+</ul>
+
+<h2>6. Backup, Monitoring, dan Rollback</h2>
+<table>
+<tr><th>Area</th><th>Prosedur yang didokumentasikan</th></tr>
+<tr><td>Backup database</td><td><code>mysqldump -u&lt;user&gt; -p db_manajemen_akademik &gt; backup.sql</code></td></tr>
+<tr><td>Restore</td><td><code>mysql -u&lt;user&gt; -p db_manajemen_akademik &lt; backup.sql</code></td></tr>
+<tr><td>Log aplikasi</td><td><code>storage/logs/laravel.log</code></td></tr>
+<tr><td>Health</td><td><code>php artisan about</code> dan endpoint <code>/up</code></td></tr>
+<tr><td>Rollback kode</td><td>Kembali ke commit tertentu melalui Git setelah backup database</td></tr>
+<tr><td>Rollback migrasi</td><td><code>php artisan migrate:rollback --step=1</code> setelah backup dan sebelum perubahan produksi</td></tr>
+</table>
+<div class="warning"><strong>Keterbatasan:</strong> prosedur ini merupakan prosedur untuk simulasi lokal. Belum ada bukti backup terjadwal, restore teruji, monitoring eksternal, atau rollback pada VM OCI produksi.</div>
+
+<div class="section">
+<h2>7. Hasil Pengujian Otomatis</h2>
+<table>
+<tr><th>Item</th><th>Hasil Aktual</th></tr>
+<tr><td>Total test</td><td>135 passed</td></tr>
+<tr><td>Assertion</td><td>564</td></tr>
+<tr><td>Database uji</td><td>SQLite in-memory dan MySQL 8.4.13</td></tr>
+<tr><td>Durasi terakhir</td><td>17.70 detik</td></tr>
+<tr><td>Browser</td><td>Playwright/Chromium berhasil menjalankan alur screenshot</td></tr>
+</table>
+<h3>Tiga fitur utama</h3>
+<ol>
+<li><strong>Autentikasi dan pembatasan role:</strong> login mahasiswa/dosen/admin; akses lintas role ditolak.</li>
+<li><strong>Tugas personal:</strong> buat, tampilkan, arsipkan, lihat riwayat, dan batasi kepemilikan.</li>
+<li><strong>Tugas akademik:</strong> distribusi progres, perubahan progres mahasiswa, koreksi dosen, lock pasca-close, dan notifikasi.</li>
+</ol>
+</div>
+
+<div class="section"><h2>8. Cara Menjalankan dan Memperpanjang Demo</h2>
+<ol>
+<li>Masuk ke folder proyek.</li>
+<li>Konfigurasi `.env`, jalankan migration dan seeder:<br><code>php artisan migrate</code><br><code>php artisan db:seed</code></li>
+<li>Jalankan aplikasi:<br><code>php artisan serve --host=127.0.0.1 --port=8000</code></li>
+<li>Jalankan tunnel pada terminal lain:<br><code>ngrok http 8000</code></li>
+<li>Salin URL HTTPS dari Ngrok ke `APP_URL`, kemudian jalankan <code>php artisan config:clear</code>.</li>
+<li>Ambil screenshot ulang:<br><code>BASE_URL=https://domain-ngrok.node tests/e2e/capture-screenshots.mjs</code></li>
+</ol>
+</div>
+
+<div class="section"><h2>9. Bukti Deployment dan HTTPS</h2>
+<div class="figure"><img src="../bukti/screenshot/01-login.png"><div class="caption">Gambar 1 — Halaman login melalui aplikasi.</div></div>
+<div class="figure"><img src="../bukti/screenshot/02-address-bar-https.png"><div class="caption">Gambar 2 — Address bar menampilkan protokol HTTPS dan domain Ngrok.</div></div>
+<div class="figure"><img src="../bukti/screenshot/03-devtools-cookie-secure.png"><div class="caption">Gambar 3 — Verifikasi cookie sesi Secure melalui Playwright/Chromium.</div></div>
+</div>
+
+<div class="section"><h2>10. Dashboard Per Role</h2>
+<div class="figure"><img src="../bukti/screenshot/04-dashboard-mahasiswa.png"><div class="caption">Gambar 4 — Dashboard Mahasiswa.</div></div>
+<div class="figure"><img src="../bukti/screenshot/05-dashboard-dosen.png"><div class="caption">Gambar 5 — Dashboard Guru/Dosen.</div></div>
+<div class="figure"><img src="../bukti/screenshot/06-dashboard-admin.png"><div class="caption">Gambar 6 — Dashboard Admin.</div></div>
+</div>
+
+<div class="section"><h2>11. Fitur 1 — Autentikasi dan Pembatasan Role</h2>
+<div class="figure"><img src="../bukti/screenshot/07-login-mahasiswa.png"><div class="caption">Gambar 7 — Login berhasil sebagai Mahasiswa.</div></div>
+<div class="figure"><img src="../bukti/screenshot/08-akses-ditolak.png"><div class="caption">Gambar 8 — Mahasiswa mencoba membuka `/admin/dashboard` dan akses ditolak.</div></div>
+<div class="figure"><img src="../bukti/screenshot/09-login-dosen.png"><div class="caption">Gambar 9 — Login berhasil sebagai Guru/Dosen.</div></div>
+<div class="figure"><img src="../bukti/screenshot/10-login-admin.png"><div class="caption">Gambar 10 — Login berhasil sebagai Admin.</div></div>
+</div>
+
+<div class="section"><h2>12. Fitur 2 — Tugas Personal</h2>
+<div class="figure"><img src="../bukti/screenshot/11-form-tugas-personal.png"><div class="caption">Gambar 11 — Form pembuatan tugas personal.</div></div>
+<div class="figure"><img src="../bukti/screenshot/12-daftar-tugas-aktif.png"><div class="caption">Gambar 12 — Tugas baru tampil pada daftar tugas aktif.</div></div>
+<div class="figure"><img src="../bukti/screenshot/13-modal-arsip.png"><div class="caption">Gambar 13 — Konfirmasi arsip tugas personal.</div></div>
+<div class="figure"><img src="../bukti/screenshot/14-riwayat-tugas.png"><div class="caption">Gambar 14 — Tugas arsip tetap tersedia pada riwayat.</div></div>
+</div>
+
+<div class="section"><h2>13. Fitur 3 — Tugas Akademik dan Progres</h2>
+<div class="figure"><img src="../bukti/screenshot/15-form-tugas-akademik.png"><div class="caption">Gambar 15 — Guru/Dosen membuat tugas akademik.</div></div>
+<div class="figure"><img src="../bukti/screenshot/16-progres-mahasiswa.png"><div class="caption">Gambar 16 — Mahasiswa memperbarui progres miliknya.</div></div>
+<div class="figure"><img src="../bukti/screenshot/17-progres-dosen.png"><div class="caption">Gambar 17 — Guru/Dosen melihat dan mengoreksi progres mahasiswa.</div></div>
+<div class="figure"><img src="../bukti/screenshot/18-tugas-ditutup.png"><div class="caption">Gambar 18 — Tugas ditutup: mahasiswa terkunci dan dosen dapat koreksi sesuai kewenangan.</div></div>
+</div>
+
+<div class="section"><h2>14. Bukti Notifikasi dan Tampilan Responsif</h2>
+<div class="figure"><img src="../bukti/screenshot/19-inbox-notifikasi.png"><div class="caption">Gambar 19 — Inbox notifikasi Mahasiswa.</div></div>
+<div class="figure"><img src="../bukti/screenshot/20-badge-unread.png"><div class="caption">Gambar 20 — Badge notifikasi belum dibaca.</div></div>
+<div class="figure"><img src="../bukti/screenshot/21-tema-gelap.png"><div class="caption">Gambar 21 — Tema gelap aplikasi.</div></div>
+<div class="figure mobile"><img src="../bukti/screenshot/22-sidebar-mobile.png"><div class="caption">Gambar 22 — Navigasi offcanvas pada viewport mobile.</div></div>
+<div class="figure mobile"><img src="../bukti/screenshot/23-tabel-responsive.png"><div class="caption">Gambar 23 — Tabel responsif pada viewport mobile.</div></div>
+</div>
+
+<div class="section"><h2>15. Dokumentasi Prompt AI dan Verifikasi Mandiri</h2>
+<p>Pemanfaatan asisten AI dicatat pada <code>docs/12_AI_PROMPT_LOG.md</code>. Pekerjaan meliputi audit Phase 8, analisis Ngrok sebagai simulasi deployment, penyusunan dokumentasi demo, pengaturan screenshot, dan verifikasi hasil.</p>
+<ul>
+<li>Verifikasi logika: <code>php artisan test --compact</code>.</li>
+<li>Verifikasi browser: Playwright + screenshot otomatis melalui Ngrok.</li>
+<li>Verifikasi cookie: atribut <code>Secure</code>, <code>HttpOnly</code>, dan <code>SameSite=Lax</code>.</li>
+<li>Verifikasi aset: Build Vite dan seluruh route yang digunakan.</li>
+</ul>
+
+<h2>16. Kesimpulan dan Keterbatasan</h2>
+<div class="status"><strong>Kesimpulan:</strong> implementasi Phase 0–8 dapat dijalankan dan didemonstrasikan. Tiga fitur utama, otorisasi role, HTTPS, dan screenshot bukti telah tersedia.</div>
+<div class="warning">
+<ul>
+<li>Deployment menggunakan Ngrok, bukan VM OCI produksi.</li>
+<li>URL hanya aktif selama server Laravel dan tunnel aktif.</li>
+<li>Tidak ada bukti deployment Nginx/PHP-FPM/MySQL pada satu VM OCI.</li>
+<li>WebKit/Safari belum diuji karena keterbatasan host.</li>
+<li>Backup eksternal dan restore produksi belum dilakukan.</li>
+</ul>
+</div>
+</div>
+
+</body>
+</html>

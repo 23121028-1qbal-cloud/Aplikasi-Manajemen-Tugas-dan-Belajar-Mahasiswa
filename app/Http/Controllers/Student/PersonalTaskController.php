@@ -145,6 +145,7 @@ class PersonalTaskController extends Controller
 
         return [
             'priorities' => Prioritas::query()->orderBy('id_prioritas')->get(),
+            'defaultPriorityId' => Prioritas::query()->where('nama_prioritas', 'Sedang')->value('id_prioritas'),
             'statuses' => StatusTugas::query()->orderBy('id_status')->get(),
             'courses' => $student->enrollments()
                 ->with('mataKuliah')

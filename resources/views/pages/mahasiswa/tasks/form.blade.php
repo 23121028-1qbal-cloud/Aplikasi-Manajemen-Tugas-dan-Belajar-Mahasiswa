@@ -79,7 +79,7 @@
                     class="form-select @error('id_prioritas') is-invalid @enderror"
                     required>
                 @foreach ($priorities as $priority)
-                    <option value="{{ $priority->id_prioritas }}" @selected(old('id_prioritas', $task->id_prioritas ?? '') == $priority->id_prioritas)>
+                    <option value="{{ $priority->id_prioritas }}" @selected(old('id_prioritas', $task->id_prioritas ?? $defaultPriorityId ?? '') == $priority->id_prioritas)>
                         {{ $priority->nama_prioritas }}
                     </option>
                 @endforeach
