@@ -26,6 +26,18 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => EnsureUserHasRole::class,
         ]);
+
+        // Proxy dipercaya hanya bila dikonfigurasi eksplisit (mis. tunnel ngrok
+        // atau Nginx). Tanpa ini, header X-Forwarded-* diabaikan.
+        $trustedProxies = env('TRUSTED_PROXIES');
+
+        if (filled($trustedProxies)) {
+            $middleware->trustProxies(
+                at: $trustedProxies === '*'
+                    ? '*'
+                    : array_map('trim', explode(',', (string) $trustedProxies))
+            );
+        }
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

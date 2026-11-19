@@ -32,7 +32,8 @@ project/
     ├── 07_SYSTEM_ARCHITECTURE.md
     ├── 08_API_SPECIFICATION.md
     ├── 09_TESTING_STRATEGY.md
-    └── 10_IMPLEMENTATION_PLAN.md
+    ├── 10_IMPLEMENTATION_PLAN.md
+    └── 11_DEMO_DEPLOYMENT.md
 ```
 
 ## Urutan membaca
@@ -48,6 +49,23 @@ project/
 9. `08_API_SPECIFICATION.md` — kontrak Web Routes dan JSON endpoints terbatas.
 10. `09_TESTING_STRATEGY.md` — strategi verifikasi.
 11. `10_IMPLEMENTATION_PLAN.md` — urutan pekerjaan dan gerbang persetujuan.
+12. `11_DEMO_DEPLOYMENT.md` — cara menjalankan aplikasi dan mengeksposnya lewat ngrok untuk demo.
+
+## Menjalankan aplikasi (demo)
+
+```bash
+composer install
+cp .env.example .env
+php artisan key:generate
+npm install && npm run build
+php artisan migrate && php artisan db:seed
+php artisan app:create-admin admin
+php artisan serve --host=127.0.0.1 --port=8000
+```
+
+Untuk akses publik dengan HTTPS, jalankan `ngrok http 8000`, lalu samakan `APP_URL`
+dengan domain ngrok dan isi `TRUSTED_PROXIES`. Langkah lengkap, verifikasi HTTPS,
+serta tiga skenario pengujian ada di `docs/11_DEMO_DEPLOYMENT.md`.
 
 ## Konvensi status
 
