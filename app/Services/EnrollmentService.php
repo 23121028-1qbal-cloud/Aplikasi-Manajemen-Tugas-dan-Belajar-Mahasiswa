@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\EnrollmentStatus;
 use App\Models\Enrollment;
+use App\Models\Mahasiswa;
 use App\Models\MataKuliah;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
@@ -24,6 +25,23 @@ class EnrollmentService
     public function enroll(array $data): array
     {
         return DB::transaction(function () use ($data) {
+            $student = Mahasiswa::query()
+                ->whereKey($data['id_mahasiswa'])
+                ->lockForUpdate()
+                ->first();
+
+            if ($student === null) {
+                throw ValidationException::withMessages([
+                    'id_mahasiswa' => 'Mahasiswa tidak ditemukan.',
+                ]);
+            }
+
+            if ($student->is_archived) {
+                throw ValidationException::withMessages([
+                    'id_mahasiswa' => 'Mahasiswa yang diarsipkan tidak dapat dienroll.',
+                ]);
+            }
+
             $course = MataKuliah::query()
                 ->whereKey($data['id_mata_kuliah'])
                 ->lockForUpdate()
@@ -53,6 +71,12 @@ class EnrollmentService
                 if ($existing->status === EnrollmentStatus::Terdaftar) {
                     throw ValidationException::withMessages([
                         'id_mata_kuliah' => 'Mahasiswa sudah terdaftar pada mata kuliah dan periode ini.',
+                    ]);
+                }
+
+                if ($existing->status === EnrollmentStatus::Ditolak) {
+                    throw ValidationException::withMessages([
+                        'id_mata_kuliah' => 'Enrollment berstatus Ditolak tidak dapat diaktifkan kembali pada MVP.',
                     ]);
                 }
 

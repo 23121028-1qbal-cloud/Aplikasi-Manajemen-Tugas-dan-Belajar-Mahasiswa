@@ -3,7 +3,7 @@
 | Metadata | Nilai |
 |---|---|
 | Document ID | DOC-01 |
-| Version | 1.4.0 |
+| Version | 1.5.0 |
 | Status | Draft Baseline — Web Migration |
 | Platform | Web Application |
 | Product | Aplikasi Manajemen Tugas dan Belajar Mahasiswa |
@@ -130,7 +130,8 @@ Keputusan 2026-11-18 (`USER-DECIDED`, `PRD-TBD-016`): temporary password berlaku
 - Admin hanya monitoring read-only.
 - Deadline bersifat informasi, bukan syarat distribusi.
 - Tugas dianggap eligible untuk distribusi susulan jika belum ditutup (`is_closed = false`) dan belum diarsipkan.
-- Menutup tugas menghentikan distribusi progres baru; perilaku perubahan progres setelah penutupan harus mengikuti keputusan final yang belum ditetapkan jika ada kebutuhan khusus.
+- Menutup tugas menghentikan distribusi progres baru.
+- Setelah tugas ditutup (`is_closed = true`), mahasiswa tidak dapat mengubah progres; dosen pengampu tetap dapat mengoreksi progres dengan pencatatan aktor. Tugas yang diarsipkan terkunci untuk semua role.
 - Distribusi harus idempotent dan tidak boleh membuat ulang atau mereset progress.
 
 ### 6.4 Aktivitas belajar
@@ -162,15 +163,30 @@ Keputusan 2026-11-18:
 - Field akun yang boleh diubah Admin: `nama_lengkap` saja. `username`, `npm`, dan `nip_guru` tidak dapat diubah pada MVP karena menjadi identifier login dan riwayat. Status akun diatur lewat aksi terpisah. Lihat REC-11/`PRD-TBD-023`.
 
 ### 6.6 Notifications
-- Notifikasi disimpan di MySQL.
-- Notifikasi ditampilkan pada web application.
+- Notifikasi disimpan di MySQL dan ditampilkan pada web application.
 - Laravel Scheduler menjalankan pekerjaan terjadwal.
-- Pemicu minimal yang telah disetujui: pengingat deadline tugas dan jadwal aktivitas belajar; penugasan tugas akademik dapat menghasilkan notifikasi penerima.
-- Deduplication wajib mencegah notifikasi ganda untuk satu event/penerima.
-- Penerima hanya dapat membaca dan menandai notifikasi miliknya.
-- Admin tidak dapat membaca isi notifikasi pengguna lain.
-- Waktu pengingat, timezone policy, retensi, dan detail preferensi: `TBD`.
+- Pemicu MVP (`USER-DECIDED`, 2026-11-19):
+  1. distribusi tugas akademik kepada setiap mahasiswa eligible, termasuk late enrollment;
+  2. pengingat deadline tugas akademik H-1 untuk progres yang belum `Selesai` pada tugas yang masih terbuka dan belum diarsipkan;
+  3. pengingat aktivitas belajar 60 menit sebelum `waktu_mulai` untuk aktivitas berstatus `Direncanakan` dan belum diarsipkan.
+- Pengingat deadline tugas personal tidak termasuk MVP.
+- Penerima adalah pengguna aktif; akun nonaktif atau profil berarsip tidak menerima notifikasi baru.
+- Deduplication wajib mencegah notifikasi ganda untuk satu event/penerima. Unique key database adalah `(id_user, dedup_key)`.
+- Retensi notifikasi 90 hari; cleanup terjadwal menghapus notifikasi yang lebih lama.
+- Tidak ada preferensi notifikasi per pengguna pada MVP; tabel `notifikasi_preferensi` ditunda.
+- Penerima hanya dapat membaca dan menandai notifikasi miliknya. Admin tidak dapat membaca isi notifikasi pengguna lain.
+- Timezone tampilan `Asia/Jakarta`; penyimpanan waktu UTC (REC-13).
 - Email dan browser push bukan bagian MVP.
+
+### 6.7 Arsip dan pemulihan akun
+- Admin dapat mengarsipkan akun Mahasiswa dan Guru/Dosen; tidak ada self-service archive.
+- Arsip bersifat soft archive dan tidak menghapus riwayat.
+- Mengarsipkan profil menetapkan `is_archived = true`, `tanggal_arsip`, dan menonaktifkan akun (`users.is_active = false`).
+- Mahasiswa berarsip tidak dapat login, tidak dapat dienroll baru, dan tidak menerima distribusi progres baru; enrollment/progres yang sudah ada tetap tersimpan.
+- Guru/Dosen hanya dapat diarsipkan jika tidak memiliki mata kuliah non-arsip. Mata kuliah harus dipindahkan ke dosen lain atau diarsipkan terlebih dahulu oleh Admin.
+- Admin dapat memulihkan akun: `is_archived = false`, `tanggal_arsip = null`, dan akun diaktifkan kembali.
+- Restore tidak membackfill progres untuk tugas akademik yang dibuat atau terlewat selama masa arsip; distribusi baru berlaku untuk event setelah restore.
+- Identitas `npm`, `nip_guru`, dan `username` tetap immutable.
 
 ## 7. Product journeys
 
@@ -207,7 +223,7 @@ Field registrasi yang telah muncul dalam keputusan sebelumnya: NPM, nama lengkap
 2. Sistem mencari tugas akademik yang belum ditutup dan belum diarsipkan.
 3. Sistem membuat progress yang belum ada.
 4. Progress yang sudah ada tidak di-reset.
-5. Notifikasi baru dibuat hanya jika event tersebut memang memenuhi deduplication policy.
+5. Satu notifikasi penugasan dibuat untuk setiap progres baru, dengan deduplication per penerima; progres yang sudah ada tidak memicu notifikasi baru.
 
 ### 7.5 Progress update
 1. Mahasiswa membuka detail tugas akademik.
@@ -222,6 +238,14 @@ Field registrasi yang telah muncul dalam keputusan sebelumnya: NPM, nama lengkap
 2. Sistem hanya mengembalikan data tugas akademik dan progres yang diizinkan.
 3. Tampilan read-only.
 4. Tidak ada akses ke deskripsi tugas personal atau materi aktivitas belajar.
+
+### 7.7 Admin archive and restore
+1. Admin membuka detail akun Mahasiswa atau Guru/Dosen.
+2. Admin memilih Arsipkan dan mengonfirmasi dampaknya.
+3. Server memeriksa role, status resource, dan untuk dosen memastikan tidak ada mata kuliah non-arsip.
+4. Server menetapkan flag arsip dan menonaktifkan akun dalam satu transaksi.
+5. Riwayat enrollment, tugas, dan progres tetap tersimpan.
+6. Admin dapat memulihkan akun; restore mengaktifkan akun tanpa membuat progres susulan.
 
 ## 8. Non-functional product requirements
 
@@ -252,13 +276,14 @@ Numeric thresholds remain `TBD`.
 |---|---|---|
 | PRD-TBD-016 | Temporary password expiry and forced change | USER-DECIDED (2026-11-18): 72 jam + wajib ganti pada login pertama |
 | PRD-TBD-017 | Personal task ownership transfer | OPEN |
-| PRD-TBD-018 | Notification schedule, lead times, timezone and preferences | OPEN |
+| PRD-TBD-018 | Notification schedule, lead times, timezone and preferences | USER-DECIDED (2026-11-19): trigger §6.6; H-1 deadline akademik; 60 menit sebelum aktivitas belajar; retensi 90 hari; tanpa preferensi; scheduler 15 menit; `Asia/Jakarta` |
 | PRD-TBD-019 | Browser session lifetime and concurrent session policy | OPEN |
 | PRD-TBD-020 | Numeric performance and availability targets | OPEN |
-| PRD-TBD-021 | Behavior of progress updates after academic task closure | OPEN |
+| PRD-TBD-021 | Behavior of progress updates after academic task closure | USER-DECIDED (2026-11-19): mahasiswa terkunci; dosen pengampu boleh koreksi dengan audit; tugas berarsip terkunci untuk semua |
 | PRD-TBD-022 | Enrollment status transition (`Ditolak`/`Dibatalkan`/`Selesai`) workflow | USER-DECIDED (2026-11-18): lihat §6.5 |
 | PRD-TBD-023 | Admin-editable account fields for Mahasiswa and Guru/Dosen | USER-DECIDED (2026-11-18): `nama_lengkap` saja |
 | PRD-TBD-024 | Deadline nullability for personal tasks | USER-DECIDED (2026-11-18): wajib untuk tugas personal dan akademik |
+| PRD-TBD-025 | Archive and restore workflow for Mahasiswa and Guru/Dosen | USER-DECIDED (2026-11-19): lihat §6.7 |
 
 ## 11. Acceptance principles
 

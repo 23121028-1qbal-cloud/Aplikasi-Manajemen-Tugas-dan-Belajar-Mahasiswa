@@ -62,8 +62,8 @@
             </div>
         @else
             <div class="col-12 col-md-6">
-                <label class="form-label">Mata Kuliah</label>
-                <input type="text" class="form-control" value="{{ $task->mataKuliah?->kode_mata_kuliah }} — {{ $task->mataKuliah?->nama_mata_kuliah }}" disabled>
+                <label for="mata_kuliah_display" class="form-label">Mata Kuliah</label>
+                <input id="mata_kuliah_display" type="text" class="form-control" value="{{ $task->mataKuliah?->kode_mata_kuliah }} — {{ $task->mataKuliah?->nama_mata_kuliah }}" disabled>
             </div>
         @endunless
 
@@ -87,7 +87,7 @@
                     class="form-select @error('id_prioritas') is-invalid @enderror"
                     required>
                 @foreach ($priorities as $priority)
-                    <option value="{{ $priority->id_prioritas }}" @selected(old('id_prioritas', $task->id_prioritas ?? '') == $priority->id_prioritas)>
+                    <option value="{{ $priority->id_prioritas }}" @selected(old('id_prioritas', $task->id_prioritas ?? $defaultPriorityId ?? '') == $priority->id_prioritas)>
                         {{ $priority->nama_prioritas }}
                     </option>
                 @endforeach

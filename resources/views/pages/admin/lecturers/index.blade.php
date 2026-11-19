@@ -84,7 +84,9 @@
                                     <td>{{ $lecturer->nip_guru }}</td>
                                     <td>{{ $lecturer->user?->username }}</td>
                                     <td>
-                                        @if ($lecturer->user?->is_active)
+                                        @if ($lecturer->is_archived)
+                                            <span class="badge text-bg-dark">Diarsipkan</span>
+                                        @elseif ($lecturer->user?->is_active)
                                             <span class="badge text-bg-success">Aktif</span>
                                         @else
                                             <span class="badge text-bg-secondary">Nonaktif</span>

@@ -16,6 +16,8 @@ class AcademicTaskController extends Controller
 {
     public function show(Request $request, Tugas $task): View
     {
+        abort_unless($request->user()->can('viewAcademic', $task), 404);
+
         $progress = $this->ownProgress($request, $task);
 
         return view('pages.mahasiswa.academic.show', [
@@ -31,6 +33,8 @@ class AcademicTaskController extends Controller
         AcademicTaskService $service
     ): RedirectResponse {
         $progress = $this->ownProgress($request, $task);
+
+        $this->authorize('update', $progress);
 
         $service->updateProgress(
             $progress,

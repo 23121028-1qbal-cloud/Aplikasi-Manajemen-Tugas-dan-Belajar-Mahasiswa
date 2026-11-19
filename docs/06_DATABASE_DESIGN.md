@@ -3,7 +3,7 @@
 | Metadata | Value |
 |---|---|
 | Document ID | DOC-06 |
-| Version | 1.5.0 |
+| Version | 1.7.0 |
 | Status | Draft — requires schema reconciliation |
 | Database | MySQL |
 | Database name | `db_manajemen_akademik` |
@@ -39,7 +39,7 @@ Principles:
 | `mahasiswa_mata_kuliah` | Student-course enrollment |
 | `tugas_akademik_progress` | Per-student progress for academic task |
 | `notifikasi` | Persisted in-app notifications |
-| `notifikasi_preferensi` | Per-user notification preferences, if enabled |
+| `notifikasi_preferensi` | Per-user notification preferences; **ditunda dari MVP** |
 
 ## 3. Logical relationships
 
@@ -54,7 +54,7 @@ erDiagram
     USERS ||--o{ TUGAS : creates
     TUGAS ||--o{ TUGAS_AKADEMIK_PROGRESS : has
     MAHASISWA ||--o{ TUGAS_AKADEMIK_PROGRESS : owns
-    USERS ||--o{ AKTIVITAS_BELAJAR : owns
+    MAHASISWA ||--o{ AKTIVITAS_BELAJAR : owns
     USERS ||--o{ NOTIFIKASI : receives
 ```
 
@@ -78,14 +78,26 @@ Do not add email as a login identifier. Lecturer contact email, if retained as p
 - `id_mahasiswa` PK.
 - `npm` unique.
 - `nama_lengkap`.
-- `is_archived` boolean and `tanggal_arsip` nullable where archive rule applies.
+- `is_archived` boolean dan `tanggal_arsip` nullable.
 - timestamps.
+
+Archive (`USER-DECIDED`, `PRD-TBD-025`, 2026-11-19):
+- Arsip menetapkan `is_archived = true` dan `tanggal_arsip = now()` serta menonaktifkan `users.is_active`.
+- Enrollment dan progres tidak dihapus; hanya penerimaan distribusi baru yang dihentikan.
+- Restore menetapkan `is_archived = false`, `tanggal_arsip = null`, dan mengaktifkan kembali akun.
+- Restore tidak membuat progres susulan untuk tugas yang terlewat selama masa arsip.
 
 ### 4.3 `guru_dosen`
 - `id_guru_dosen` PK.
 - `nip_guru` unique (exact naming/nullable policy to verify).
 - name and lecturer profile fields.
+- `is_archived`, `tanggal_arsip`.
 - timestamps.
+
+Archive (`USER-DECIDED`, `PRD-TBD-025`, 2026-11-19):
+- Dosen hanya dapat diarsipkan jika tidak memiliki `mata_kuliah` dengan `is_archived = false`.
+- Arsip menetapkan flag profil dan menonaktifkan akun; restore mengaktifkan akun tanpa memindahkan kembali mata kuliah yang sudah dialihkan.
+- Tugas akademik dan progres yang sudah ada tetap tersimpan.
 
 ### 4.4 `mata_kuliah`
 - `id_mata_kuliah` PK.
@@ -132,9 +144,9 @@ Rules:
 - `id_aktivitas` PK.
 - `id_mata_kuliah` nullable.
 - `id_status_belajar` required.
-- `id_user` required FK to owner account.
+- `id_mahasiswa` required FK ke `mahasiswa` (`USER-DECIDED`, REC-02, 2026-11-18).
 - `judul_aktivitas`, `materi_belajar`, `waktu_mulai`, `durasi_menit`, `tanggal_dibuat`.
-- `USER-DECIDED` (REC-02, 2026-11-18): agar konsisten dengan `tugas.id_mahasiswa_pemilik`, ownership diseragamkan menjadi `id_mahasiswa` FK ke `mahasiswa`, dengan validasi bahwa akun terkait berrole `mahasiswa`.
+- Ownership diseragamkan dengan `tugas.id_mahasiswa_pemilik`, dengan validasi bahwa akun terkait berrole `mahasiswa`. Tidak ada kolom `id_user` pada tabel ini.
 - `is_archived`, `tanggal_arsip`.
 - timestamps.
 - `durasi_menit > 0`.
@@ -173,7 +185,9 @@ Unique: `(id_tugas, id_mahasiswa)`.
 Rules:
 - One progress record per student per academic task.
 - Initial status Belum Dikerjakan.
-- Student may update own progress.
+- Student may update own progress while the task is open and not archived.
+- After the task is closed (`tugas.is_closed = true`), the student is blocked; the assigned lecturer may still correct progress with actor audit.
+- After the task is archived, progress is locked for all roles.
 - Lecturer may correct progress only for courses they teach.
 - Record the account that last changed the progress.
 - Progress mutation never modifies the task definition.
@@ -182,23 +196,28 @@ Rules:
 ### 4.10 `notifikasi`
 - `id_notifikasi` PK.
 - `id_user` recipient FK.
-- `tipe`, `judul`, `pesan`.
+- `tipe` VARCHAR(50), `judul`, `pesan`.
 - `resource_type`, `resource_id` optional polymorphic reference.
 - `is_read`, `read_at`.
 - `dedup_key`, dengan unique **`(id_user, dedup_key)`** (`USER-DECIDED`, REC-01, 2026-11-18). Unique global akan menolak notifikasi penerima kedua pada satu event distribusi, sehingga cakupan per penerima diperlukan.
 - `tanggal_dibuat`, timestamps.
 
-Only the recipient may read or mark a notification as read. Admin cannot inspect another user's notification content.
+Tipe MVP (`USER-DECIDED`, `PRD-TBD-018`, 2026-11-19):
+- `academic_task_assigned`: satu per penerima per tugas, termasuk late enrollment.
+- `academic_task_deadline`: H-1 untuk progres belum `Selesai` pada tugas terbuka dan tidak diarsipkan.
+- `study_activity_reminder`: 60 menit sebelum `waktu_mulai` untuk aktivitas `Direncanakan` dan tidak diarsipkan.
+
+Dedup key yang disarankan:
+- `academic_task_assigned:{id_tugas}:{id_mahasiswa}`
+- `academic_task_deadline:{id_tugas}:{id_mahasiswa}:{deadline_date}`
+- `study_activity_reminder:{id_aktivitas}:{id_mahasiswa}:{waktu_mulai}`
+
+Penerima hanya pengguna aktif dan profil tidak berarsip. Retensi 90 hari; cleanup menghapus baris lebih lama dari 90 hari. Only the recipient may read or mark a notification as read. Admin cannot inspect another user's notification content.
 
 ### 4.11 `notifikasi_preferensi`
-- `id_notifikasi_preferensi` PK.
-- `id_user` FK.
-- `tipe`.
-- `is_enabled`.
-- `updated_at`.
-- Unique `(id_user, tipe)`.
-
-Existence and exact preference types depend on final notification policy; if no per-user preference feature is approved, this table may be deferred.
+- **Ditunda dari MVP** (`USER-DECIDED`, `PRD-TBD-018`, 2026-11-19).
+- Tidak dibuat pada migration Phase 7.
+- Jika diaktifkan kemudian, memerlukan `id_user`, `tipe`, `is_enabled`, unique `(id_user, tipe)`, dan halaman pengaturan.
 
 ## 5. Referential integrity
 
@@ -209,7 +228,7 @@ Expected important FK relationships:
 - `tugas.id_mata_kuliah` → `mata_kuliah.id_mata_kuliah`.
 - `tugas.id_prioritas` → `prioritas.id_prioritas`.
 - `tugas.id_status` → `status_tugas.id_status`.
-- `aktivitas_belajar.id_user` → `users.id_user`.
+- `aktivitas_belajar.id_mahasiswa` → `mahasiswa.id_mahasiswa`.
 - `mahasiswa_mata_kuliah` → `mahasiswa`, `mata_kuliah`.
 - `tugas_akademik_progress` → `tugas`, `mahasiswa`, `status_tugas`, `users`.
 - `notifikasi.id_user` → `users`.
@@ -218,18 +237,18 @@ Expected important FK relationships:
 
 Recommended candidates; validate with query plans and actual access patterns:
 - `users(username)` unique.
-- `mahasiswa(npm)` unique.
-- `guru_dosen(nip_guru)` unique.
+- `mahasiswa(npm)` unique; `mahasiswa(is_archived)`.
+- `guru_dosen(nip_guru)` unique; `guru_dosen(is_archived)`.
 - `mata_kuliah(kode_mata_kuliah)` unique.
 - `mata_kuliah(guru_dosen_id, is_archived)`.
 - `tugas(id_mahasiswa_pemilik, task_type, is_archived)`.
 - `tugas(id_pembuat_guru_dosen, task_type, is_closed, is_archived)`.
 - `tugas(id_mata_kuliah, task_type, is_closed, is_archived)`.
-- `aktivitas_belajar(id_user, is_archived, waktu_mulai)`.
+- `aktivitas_belajar(id_mahasiswa, is_archived, waktu_mulai)`.
 - enrollment unique composite plus indexes by student/status and course/status.
 - progress unique composite plus index by task and by student.
-- notification `(id_user, is_read, tanggal_dibuat)`.
-- notification dedup key unique.
+- notification `(id_user, is_read, tanggal_dibuat)` dan `(tanggal_dibuat)` untuk cleanup retensi.
+- notification dedup key unique `(id_user, dedup_key)`.
 
 ## 7. Concurrency policy — per data type
 
@@ -250,13 +269,16 @@ Final decision requires testing race conditions. `updated_at` is not itself an o
 
 ## 8. Data lifecycle and archival
 
-- Student, course, task, and study activity archive flags must follow the approved lifecycle.
+- Student, lecturer, course, task, and study activity archive flags must follow the approved lifecycle.
 - Archive must preserve enrollment and progress history.
 - Hard deletion must be blocked where it breaks audit/history or restrictive FKs.
 - Completed status is not equivalent to archive.
 - Closed academic task is not equivalent to archived task.
 - Course archive stops new distribution.
-- Student archive prevents new distribution while preserving history.
+- Student archive deactivates the account and prevents new distribution while preserving history.
+- Lecturer archive deactivates the account and is blocked while the lecturer has a non-archived course.
+- Restore clears the archive flag, reactivates the account, and does not backfill missed progress.
+- Notification retention is 90 days; cleanup deletes older notification rows only.
 
 ## 9. Transaction boundaries
 
@@ -268,7 +290,9 @@ Use transactions for:
 5. Academic task create + initial progress distribution + notification event creation.
 6. Academic task close.
 7. Progress correction.
-8. Archive operations affecting related state.
+8. Archive/restore akun Mahasiswa dan Guru/Dosen, termasuk pengecekan mata kuliah aktif dosen.
+9. Archive operations affecting related state.
+10. Pembuatan notifikasi dan cleanup retensi 90 hari harus idempotent dan aman dijalankan berulang.
 
 External side effects (email/push) are out of MVP. Scheduler notifications should be created in DB transaction-safe jobs with deduplication.
 
@@ -284,19 +308,16 @@ Initial Admin provisioning must be secure and not rely on a public registration 
 
 ## 11. Open database decisions
 
-- Profile/account mapping and exact `users` schema.
-- Temporary password lifecycle fields/flags.
-- Whether `notifikasi_preferensi` is MVP.
-- Final `row_version` decision untuk notifikasi dan archive flags (tugas, aktivitas belajar, mata kuliah, tugas akademik, dan progres akademik sudah memakai `row_version` per 2026-11-19).
-- Exact soft archive columns and affected entities.
-- Exact column names/types/lengths, timestamp timezone policy.
-- MySQL version and CHECK constraint enforcement.
-- Final ERD and DDL audit.
+- `row_version` untuk notifikasi dan archive flags (tugas, aktivitas belajar, mata kuliah, tugas akademik, dan progres akademik sudah memakai `row_version` per 2026-11-19).
+- Finalisasi panjang/tipe kolom, CHECK constraint, dan audit DDL pada CP2.
+- Final ERD dan DDL audit.
+- Indeks tambahan berdasarkan query plan setelah implementasi.
 
+Sudah ditutup: profile/account mapping dan `users` schema (diimplementasikan), temporary password fields/flags (`PRD-TBD-016`), REC-15 versi MySQL 8.4, timezone `UTC`/`Asia/Jakarta` (REC-13), alur arsip/restore (`PRD-TBD-025`), cakupan notifikasi (`PRD-TBD-018`), dan `notifikasi_preferensi` ditunda dari MVP.
 
-## 12. Rekonsiliasi skema (2026-11-18, `PROPOSED`)
+## 12. Rekonsiliasi skema (2026-11-18)
 
-Audit menemukan konflik dan celah berikut. Semua butir berstatus `PROPOSED` atau `OPEN`; tidak satu pun mengubah definisi `USER-DECIDED`. Migration final tetap menunggu CP2.
+Audit menemukan konflik dan celah berikut. Status setiap butir mengikuti kolom Status; REC-01 s.d. REC-15 sudah `USER-DECIDED`. Migration final tetap menunggu audit CP2, meskipun migration pengembangan sudah dijalankan.
 
 | ID | Temuan | Penyelesaian | Status |
 |---|---|---|---|
@@ -318,3 +339,7 @@ Catatan implementasi Phase 3 (2026-11-18): `users.id_user` BIGINT UNSIGNED PK, `
 Catatan implementasi Phase 5 (2026-11-18): `prioritas`, `status_tugas`, dan `status_belajar` diisi nilai baseline melalui migration dan `ReferenceDataSeeder` (idempotent). `tugas` memakai `judul_tugas` VARCHAR(150), `deskripsi` TEXT, `deadline` DATETIME wajib, `task_type` ENUM(`personal`,`academic`), serta FK restrict-on-delete untuk mata kuliah, prioritas, status, pembuat, dan pemilik. `aktivitas_belajar` memakai `judul_aktivitas` VARCHAR(150), `materi_belajar` TEXT, `waktu_mulai` DATETIME, `durasi_menit` SMALLINT UNSIGNED, `tanggal_dibuat` DATE, dan `id_mahasiswa` sesuai REC-02. `durasi_menit > 0` divalidasi di server.
 
 Catatan implementasi Phase 4 (2026-11-18): `mata_kuliah.kode_mata_kuliah` VARCHAR(20) unique, `nama_mata_kuliah` VARCHAR(100), `guru_dosen_id` FK restrict-on-delete, flag `is_archived`/`tanggal_arsip`. `mahasiswa_mata_kuliah` memakai `tahun_akademik` VARCHAR(9), `semester` ENUM(`Ganjil`,`Genap`), `status` ENUM(`Terdaftar`,`Ditolak`,`Dibatalkan`,`Selesai`), unique `(id_mahasiswa, id_mata_kuliah, tahun_akademik, semester)`, dan FK restrict-on-delete. Enrollment baru selalu dibuat `Terdaftar`; transisi `Terdaftar`→`Dibatalkan` dan `Terdaftar`→`Selesai` diimplementasikan, reaktivasi memakai baris periode yang sama, dan `Ditolak` tidak ditawarkan di MVP (REC-04). `users` mendapat kolom `must_change_password` boolean dan `temporary_password_expires_at` nullable untuk lifecycle temporary password 72 jam (`PRD-TBD-016`).
+
+Catatan implementasi gap closure (2026-11-19): `mahasiswa.is_archived` dan `guru_dosen.is_archived` kini memiliki alur arsip/restore oleh Admin; arsip juga menonaktifkan `users.is_active`. Dosen tidak dapat diarsipkan selama memiliki mata kuliah non-arsip, dan dosen berarsip tidak dapat ditugaskan ke mata kuliah baru. `EnrollmentService` menolak enrollment mahasiswa berarsip, distribusi progres mengecualikan mahasiswa berarsip, dan reaktivasi `Ditolak` ditolak. Default prioritas tugas akademik adalah `Sedang` jika tidak dipilih. Restore tidak membackfill progres yang terlewat.
+
+Catatan implementasi Phase 7 (2026-11-19): tabel `notifikasi` sudah dibuat dengan unique `(id_user, dedup_key)`, index inbox `(id_user, is_read, tanggal_dibuat)`, index retensi `(tanggal_dibuat)`, dan FK `id_user` restrict-on-delete. Tipe `academic_task_assigned`, `academic_task_deadline`, dan `study_activity_reminder` memakai dedup key §4.10; hanya pengguna aktif/non-arsip yang menerima notifikasi; cleanup menghapus baris lebih lama dari 90 hari; `notifikasi_preferensi` tidak dibuat.

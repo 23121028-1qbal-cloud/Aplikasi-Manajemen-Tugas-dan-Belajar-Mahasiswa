@@ -20,6 +20,8 @@ class AcademicTaskController extends Controller
 {
     public function index(Request $request): View
     {
+        $this->authorize('viewAnyAcademic', Tugas::class);
+
         $lecturer = $request->user()->guruDosen;
         abort_if($lecturer === null, 404);
 
@@ -47,6 +49,8 @@ class AcademicTaskController extends Controller
 
     public function create(Request $request): View
     {
+        $this->authorize('createAcademic', Tugas::class);
+
         $lecturer = $request->user()->guruDosen;
         abort_if($lecturer === null, 404);
 
@@ -56,11 +60,14 @@ class AcademicTaskController extends Controller
                 ->orderBy('kode_mata_kuliah')
                 ->get(),
             'priorities' => Prioritas::query()->orderBy('id_prioritas')->get(),
+            'defaultPriorityId' => Prioritas::query()->where('nama_prioritas', 'Sedang')->value('id_prioritas'),
         ]);
     }
 
     public function store(StoreAcademicTaskRequest $request, AcademicTaskService $service): RedirectResponse
     {
+        $this->authorize('createAcademic', Tugas::class);
+
         $lecturer = $request->user()->guruDosen;
         abort_if($lecturer === null, 404);
 
@@ -99,6 +106,7 @@ class AcademicTaskController extends Controller
         return view('pages.lecturer.academic-tasks.edit', [
             'task' => $task,
             'priorities' => Prioritas::query()->orderBy('id_prioritas')->get(),
+            'defaultPriorityId' => Prioritas::query()->where('nama_prioritas', 'Sedang')->value('id_prioritas'),
         ]);
     }
 
@@ -149,6 +157,7 @@ class AcademicTaskController extends Controller
         $task = $this->assignedTask($request, $progress->tugas);
 
         abort_unless($progress->id_tugas === $task->id_tugas, 404);
+        $this->authorize('correct', $progress);
 
         $service->updateProgress(
             $progress,
@@ -167,11 +176,15 @@ class AcademicTaskController extends Controller
         $lecturer = $request->user()->guruDosen;
         abort_if($lecturer === null, 404);
 
-        return Tugas::query()
+        $managed = Tugas::query()
             ->academic()
             ->whereKey($task->getKey())
             ->whereHas('mataKuliah', fn ($query) => $query->where('guru_dosen_id', $lecturer->id_guru_dosen))
             ->firstOrFail();
+
+        abort_unless($request->user()->can('manageAcademic', $managed), 404);
+
+        return $managed;
     }
 
     private function assignedCourse(int $lecturerId, int $courseId): MataKuliah

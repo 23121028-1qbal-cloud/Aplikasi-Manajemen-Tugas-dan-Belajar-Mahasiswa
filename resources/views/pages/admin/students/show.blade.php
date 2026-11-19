@@ -30,6 +30,16 @@
                 @endif
             </dd>
 
+            <dt class="col-sm-3">Status Arsip</dt>
+            <dd class="col-sm-9">
+                @if ($student->is_archived)
+                    <span class="badge text-bg-dark">Diarsipkan</span>
+                    <span class="small text-body-secondary ms-1">{{ $student->tanggal_arsip?->format('d M Y H:i') }}</span>
+                @else
+                    <span class="badge text-bg-light border">Tidak diarsipkan</span>
+                @endif
+            </dd>
+
             <dt class="col-sm-3">Terdaftar Sejak</dt>
             <dd class="col-sm-9">{{ $student->created_at?->format('d M Y') }}</dd>
         </dl>
@@ -67,31 +77,80 @@
 
         <div class="col-12 col-lg-4">
             <div class="app-card h-100 p-4">
-                <h3 class="h6">Status Akun</h3>
-                <p class="small text-body-secondary">
-                    Akun nonaktif tidak dapat membuat sesi baru dan sesi aktifnya diakhiri pada request berikutnya.
-                </p>
+                <h3 class="h6">Status dan Arsip</h3>
 
-                <button type="button"
-                        class="btn btn-sm {{ $student->user?->is_active ? 'btn-outline-danger' : 'btn-outline-success' }}"
-                        data-bs-toggle="modal"
-                        data-bs-target="#student-status-{{ $student->id_mahasiswa }}">
-                    {{ $student->user?->is_active ? 'Nonaktifkan Akun' : 'Aktifkan Akun' }}
-                </button>
+                @if ($student->is_archived)
+                    <p class="small text-body-secondary">
+                        Akun ini diarsipkan dan tidak dapat login. Pulihkan akun untuk mengaktifkannya kembali.
+                        Progres yang terlewat selama masa arsip tidak dibuat ulang secara otomatis.
+                    </p>
 
-                <x-confirm-modal
-                    id="student-status-{{ $student->id_mahasiswa }}"
-                    :title="$student->user?->is_active ? 'Nonaktifkan akun ini?' : 'Aktifkan akun ini?'"
-                    :message="$student->user?->is_active
-                        ? 'Mahasiswa tidak dapat login sampai akun diaktifkan kembali. Riwayat data tetap tersimpan.'
-                        : 'Mahasiswa dapat login kembali setelah akun diaktifkan.'"
-                    :action="route('admin.students.status', $student)"
-                    method="PATCH"
-                    :confirm="$student->user?->is_active ? 'Nonaktifkan' : 'Aktifkan'"
-                    :variant="$student->user?->is_active ? 'danger' : 'success'"
-                >
-                    <input type="hidden" name="is_active" value="{{ $student->user?->is_active ? '0' : '1' }}">
-                </x-confirm-modal>
+                    <button type="button"
+                            class="btn btn-sm btn-outline-success"
+                            data-bs-toggle="modal"
+                            data-bs-target="#student-restore-{{ $student->id_mahasiswa }}">
+                        Pulihkan Akun
+                    </button>
+
+                    <x-confirm-modal
+                        id="student-restore-{{ $student->id_mahasiswa }}"
+                        title="Pulihkan akun ini?"
+                        message="Akun akan aktif kembali. Progres tugas yang terlewat selama masa arsip tidak dibuat ulang."
+                        :action="route('admin.students.restore', $student)"
+                        method="PATCH"
+                        confirm="Pulihkan"
+                        variant="success"
+                    />
+                @else
+                    <p class="small text-body-secondary">
+                        Akun nonaktif tidak dapat membuat sesi baru dan sesi aktifnya diakhiri pada request berikutnya.
+                    </p>
+
+                    <button type="button"
+                            class="btn btn-sm {{ $student->user?->is_active ? 'btn-outline-danger' : 'btn-outline-success' }}"
+                            data-bs-toggle="modal"
+                            data-bs-target="#student-status-{{ $student->id_mahasiswa }}">
+                        {{ $student->user?->is_active ? 'Nonaktifkan Akun' : 'Aktifkan Akun' }}
+                    </button>
+
+                    <x-confirm-modal
+                        id="student-status-{{ $student->id_mahasiswa }}"
+                        :title="$student->user?->is_active ? 'Nonaktifkan akun ini?' : 'Aktifkan akun ini?'"
+                        :message="$student->user?->is_active
+                            ? 'Mahasiswa tidak dapat login sampai akun diaktifkan kembali. Riwayat data tetap tersimpan.'
+                            : 'Mahasiswa dapat login kembali setelah akun diaktifkan.'"
+                        :action="route('admin.students.status', $student)"
+                        method="PATCH"
+                        :confirm="$student->user?->is_active ? 'Nonaktifkan' : 'Aktifkan'"
+                        :variant="$student->user?->is_active ? 'danger' : 'success'"
+                    >
+                        <input type="hidden" name="is_active" value="{{ $student->user?->is_active ? '0' : '1' }}">
+                    </x-confirm-modal>
+
+                    <hr>
+
+                    <h4 class="h6">Arsipkan Akun</h4>
+                    <p class="small text-body-secondary">
+                        Arsip menonaktifkan akun dan mempertahankan seluruh riwayat. Gunakan aksi ini untuk mahasiswa yang tidak lagi aktif, bukan untuk penonaktifan sementara.
+                    </p>
+
+                    <button type="button"
+                            class="btn btn-sm btn-outline-dark"
+                            data-bs-toggle="modal"
+                            data-bs-target="#student-archive-{{ $student->id_mahasiswa }}">
+                        Arsipkan Akun
+                    </button>
+
+                    <x-confirm-modal
+                        id="student-archive-{{ $student->id_mahasiswa }}"
+                        title="Arsipkan akun ini?"
+                        message="Akun tidak dapat login sampai dipulihkan. Enrollment dan progres yang sudah ada tetap tersimpan; tugas baru tidak didistribusikan."
+                        :action="route('admin.students.archive', $student)"
+                        method="PATCH"
+                        confirm="Arsipkan"
+                        variant="danger"
+                    />
+                @endif
             </div>
         </div>
 

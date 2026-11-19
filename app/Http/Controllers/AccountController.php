@@ -12,18 +12,24 @@ class AccountController extends Controller
 {
     public function show(Request $request): View
     {
+        $this->authorize('view', $request->user());
+
         return view('pages.account.show', [
             'user' => $request->user()->load('mahasiswa', 'guruDosen'),
         ]);
     }
 
-    public function editPassword(): View
+    public function editPassword(Request $request): View
     {
+        $this->authorize('updatePassword', $request->user());
+
         return view('pages.account.password');
     }
 
     public function updatePassword(UpdatePasswordRequest $request): RedirectResponse
     {
+        $this->authorize('updatePassword', $request->user());
+
         $request->user()->forceFill([
             'password' => $request->validated('password'),
             'must_change_password' => false,

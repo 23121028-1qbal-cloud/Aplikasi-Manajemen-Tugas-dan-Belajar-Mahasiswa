@@ -32,6 +32,16 @@
 
             <dt class="col-sm-3">Mata Kuliah</dt>
             <dd class="col-sm-9">{{ $lecturer->mata_kuliah_count }}</dd>
+
+            <dt class="col-sm-3">Status Arsip</dt>
+            <dd class="col-sm-9">
+                @if ($lecturer->is_archived)
+                    <span class="badge text-bg-dark">Diarsipkan</span>
+                    <span class="small text-body-secondary ms-1">{{ $lecturer->tanggal_arsip?->format('d M Y H:i') }}</span>
+                @else
+                    <span class="badge text-bg-light border">Tidak diarsipkan</span>
+                @endif
+            </dd>
         </dl>
     </div>
 
@@ -87,5 +97,59 @@
                 />
             </div>
         </div>
+    </div>
+
+    <div class="app-card p-4 mt-3">
+        <h3 class="h6">Arsip Akun</h3>
+
+        @if ($lecturer->is_archived)
+            <p class="small text-body-secondary">
+                Akun ini diarsipkan dan tidak dapat login. Pulihkan untuk mengaktifkannya kembali. Mata kuliah yang sudah dialihkan tidak kembali secara otomatis.
+            </p>
+
+            <button type="button"
+                    class="btn btn-sm btn-outline-success"
+                    data-bs-toggle="modal"
+                    data-bs-target="#lecturer-restore-{{ $lecturer->id_guru_dosen }}">
+                Pulihkan Akun
+            </button>
+
+            <x-confirm-modal
+                id="lecturer-restore-{{ $lecturer->id_guru_dosen }}"
+                title="Pulihkan akun ini?"
+                message="Akun akan aktif kembali. Mata kuliah yang sudah dialihkan tetap berada pada dosen pengampu saat ini."
+                :action="route('admin.lecturers.restore', $lecturer)"
+                method="PATCH"
+                confirm="Pulihkan"
+                variant="success"
+            />
+        @else
+            <p class="small text-body-secondary">
+                Arsip menonaktifkan akun dan mempertahankan seluruh riwayat. Dosen hanya dapat diarsipkan jika tidak memiliki mata kuliah non-arsip.
+            </p>
+
+            @if ($lecturer->active_courses_count > 0)
+                <div class="alert alert-warning mb-0" role="status">
+                    Masih ada {{ $lecturer->active_courses_count }} mata kuliah non-arsip. Pindahkan ke dosen lain atau arsipkan mata kuliah tersebut terlebih dahulu.
+                </div>
+            @else
+                <button type="button"
+                        class="btn btn-sm btn-outline-dark"
+                        data-bs-toggle="modal"
+                        data-bs-target="#lecturer-archive-{{ $lecturer->id_guru_dosen }}">
+                    Arsipkan Akun
+                </button>
+
+                <x-confirm-modal
+                    id="lecturer-archive-{{ $lecturer->id_guru_dosen }}"
+                    title="Arsipkan akun ini?"
+                    message="Akun tidak dapat login sampai dipulihkan. Tugas akademik dan progres yang sudah ada tetap tersimpan."
+                    :action="route('admin.lecturers.archive', $lecturer)"
+                    method="PATCH"
+                    confirm="Arsipkan"
+                    variant="danger"
+                />
+            @endif
+        @endif
     </div>
 @endsection

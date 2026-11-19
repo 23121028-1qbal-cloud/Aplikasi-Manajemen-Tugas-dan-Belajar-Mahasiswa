@@ -52,7 +52,7 @@
             <x-confirm-modal
                 id="close-academic-{{ $task->id_tugas }}"
                 title="Tutup tugas akademik ini?"
-                message="Setelah ditutup, mahasiswa yang mendaftar kemudian tidak menerima progres baru. Progres yang sudah ada tetap tersimpan."
+                message="Setelah ditutup, mahasiswa tidak dapat mengubah progres dan mahasiswa yang mendaftar kemudian tidak menerima progres baru. Dosen masih dapat mengoreksi progres; riwayat tetap tersimpan."
                 :action="route('lecturer.academic-tasks.close', $task)"
                 method="PATCH"
                 confirm="Tutup Tugas"

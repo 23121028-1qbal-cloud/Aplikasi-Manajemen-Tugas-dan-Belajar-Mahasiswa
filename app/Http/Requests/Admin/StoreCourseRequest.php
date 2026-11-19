@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreCourseRequest extends FormRequest
 {
@@ -16,7 +17,11 @@ class StoreCourseRequest extends FormRequest
         return [
             'kode_mata_kuliah' => ['required', 'string', 'max:20', 'unique:mata_kuliah,kode_mata_kuliah'],
             'nama_mata_kuliah' => ['required', 'string', 'max:100'],
-            'guru_dosen_id' => ['required', 'integer', 'exists:guru_dosen,id_guru_dosen'],
+            'guru_dosen_id' => [
+                'required',
+                'integer',
+                Rule::exists('guru_dosen', 'id_guru_dosen')->where('is_archived', 0),
+            ],
         ];
     }
 }

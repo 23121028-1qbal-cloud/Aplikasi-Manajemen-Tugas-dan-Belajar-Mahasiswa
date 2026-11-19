@@ -33,13 +33,9 @@ class CourseController extends Controller
     {
         $student = $request->user()->mahasiswa;
 
-        $enrolled = $student !== null && $student->enrollments()
-            ->where('id_mata_kuliah', $course->id_mata_kuliah)
-            ->where('status', EnrollmentStatus::Terdaftar)
-            ->exists();
-
         // Resource milik pihak lain tidak didiskusikan keberadaannya (REC-12).
-        abort_unless($enrolled, 404);
+        abort_unless($request->user()->can('view', $course), 404);
+        abort_if($student === null, 404);
 
         $progress = ProgresTugasAkademik::query()
             ->where('id_mahasiswa', $student->id_mahasiswa)

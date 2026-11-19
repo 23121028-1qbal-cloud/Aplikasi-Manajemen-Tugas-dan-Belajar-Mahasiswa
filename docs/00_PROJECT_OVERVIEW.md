@@ -4,9 +4,9 @@
 |---|---|
 | Project | Aplikasi Manajemen Tugas dan Belajar Mahasiswa |
 | Document ID | DOC-00 |
-| Version | 1.1.0 |
+| Version | 1.3.0 |
 | Status | Draft Baseline — Web Migration |
-| Last Updated | 2026-11-17 |
+| Last Updated | 2026-11-19 |
 | Platform | Web Application only |
 | Application Style | Laravel Full-Stack |
 | Frontend | Laravel Blade |
@@ -75,6 +75,7 @@ Sistem menyediakan satu aplikasi terpusat dengan pembagian kewenangan Mahasiswa,
 | Frontend | Laravel Blade (`USER-DECIDED`) |
 | Application architecture | Laravel Full-Stack satu aplikasi (`USER-DECIDED`) |
 | Authentication | Laravel Session Authentication (`USER-DECIDED`) |
+| Authorization | Role middleware + Policy/Gate untuk resource (`USER-DECIDED`, 2026-11-19) |
 | Login | Username + password (`USER-DECIDED`) |
 | Password recovery | Admin memberikan temporary password (`USER-DECIDED`) |
 | Connectivity | Online-first; koneksi diperlukan (`USER-DECIDED`) |
@@ -88,7 +89,7 @@ Sistem menyediakan satu aplikasi terpusat dengan pembagian kewenangan Mahasiswa,
 | Deployment | Satu VM OCI untuk Nginx, Laravel, dan MySQL (`USER-DECIDED`) |
 | Database | MySQL; nama database `db_manajemen_akademik` (baseline terdahulu) |
 | Server language | PHP melalui Laravel |
-| Runtime versions | `TBD` pada tahap implementasi |
+| Runtime versions | Laravel 12.x, PHP 8.4, MySQL 8.4 LTS, Bootstrap 5.3, Bootstrap Icons (`USER-DECIDED`, REC-15); versi Nginx/Ubuntu masih `TBD` |
 
 ## 6. Aturan bisnis yang dipertahankan
 
@@ -112,6 +113,10 @@ Sistem menyediakan satu aplikasi terpusat dengan pembagian kewenangan Mahasiswa,
 18. Prioritas hanya `Rendah`, `Sedang`, `Tinggi`.
 19. Arsip dilakukan secara soft archive; data historis dan relasi penting dipertahankan.
 20. Admin tidak memperoleh akses ke isi data personal hanya karena memiliki role Admin.
+21. Arsip akun menonaktifkan akun dan dapat dipulihkan; dosen hanya dapat diarsipkan tanpa mata kuliah non-arsip; restore tidak membackfill progres.
+22. Notifikasi MVP: distribusi tugas akademik, deadline akademik H-1, dan aktivitas belajar 60 menit sebelum mulai; retensi 90 hari; tanpa preferensi per pengguna.
+23. Setelah tugas akademik ditutup, mahasiswa terkunci; dosen pengampu boleh koreksi dengan audit; tugas berarsip terkunci untuk semua.
+24. Otorisasi resource wajib memakai Policy/Gate di samping role middleware dan query scoping.
 
 ## 7. Ruang lingkup MVP
 
@@ -155,13 +160,15 @@ Lihat `README.md` untuk daftar dan urutan dokumen. PRD menjadi sumber kebutuhan 
 | ID | Topik | Status |
 |---|---|---|
 | TBD-PO-01 | Kebijakan transfer ownership tugas personal | OPEN |
-| TBD-PO-02 | Waktu pengingat dan preferensi notifikasi | OPEN |
-| TBD-PO-03 | Retensi notifikasi dan audit log | OPEN |
+| TBD-PO-02 | Waktu pengingat, lead time, preferensi, dan retensi notifikasi | USER-DECIDED (2026-11-19): lihat aturan 22 |
+| TBD-PO-03 | Retensi audit log | OPEN (retensi notifikasi sudah 90 hari) |
 | TBD-PO-04 | Target performa terukur dan kapasitas | OPEN |
-| TBD-PO-05 | Versi runtime/framework dan browser support floor | OPEN |
+| TBD-PO-05 | Browser support floor dan versi Nginx/Ubuntu; versi aplikasi sudah ditetapkan REC-15 | PARTIALLY DECIDED |
 | TBD-PO-06 | Parameter final VM OCI, backup, RPO/RTO | OPEN |
-| TBD-PO-07 | Aturan optimistic locking per entitas | OPEN |
-| TBD-PO-08 | Finalisasi skema akun, profile lifecycle, dan DDL | OPEN |
+| TBD-PO-07 | Matriks concurrency final per entitas/operasi | PARTIALLY DECIDED |
+| TBD-PO-08 | Finalisasi DDL audit pada CP2; profile/account mapping sudah diimplementasikan | PARTIALLY DECIDED |
+| TBD-PO-09 | Alur arsip mahasiswa/guru_dosen dan konsekuensinya | USER-DECIDED (2026-11-19): arsip + restore, akun nonaktif, dosen bebas mata kuliah aktif |
+| TBD-PO-10 | Kebijakan pembaruan progres setelah tugas akademik ditutup | USER-DECIDED (2026-11-19): mahasiswa terkunci; dosen koreksi; arsip terkunci |
 
 ## 11. Change control
 

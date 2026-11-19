@@ -12,6 +12,8 @@ class AcademicMonitoringController extends Controller
 {
     public function index(Request $request): View
     {
+        $this->authorize('monitor', Tugas::class);
+
         $tasks = Tugas::query()
             ->academic()
             ->with(['mataKuliah.guruDosen', 'prioritas'])
@@ -39,6 +41,8 @@ class AcademicMonitoringController extends Controller
 
     public function show(Tugas $task): View
     {
+        $this->authorize('monitor', Tugas::class);
+
         // Monitoring hanya membaca definisi tugas akademik dan progres.
         $task = Tugas::query()
             ->academic()

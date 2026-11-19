@@ -3,7 +3,7 @@
 | Metadata | Value |
 |---|---|
 | Document ID | DOC-05 |
-| Version | 1.1.0 |
+| Version | 1.2.0 |
 | Status | Draft |
 | UI stack | Blade + Bootstrap |
 
@@ -151,8 +151,8 @@ Do not show personal task or study activity content in Admin monitoring componen
 
 ## 11. Open decisions
 
-- Exact icon library.
-- Final Bootstrap version.
 - Exact design tokens.
 - Toast library/native Bootstrap usage.
 - Whether calendar component is MVP or later.
+
+Sudah ditetapkan: Bootstrap 5.3 dan Bootstrap Icons (REC-15). Komponen wajib memakai Policy/Gate untuk keputusan otorisasi; visibilitas komponen bukan kontrol keamanan (`USER-DECIDED`, 2026-11-19).

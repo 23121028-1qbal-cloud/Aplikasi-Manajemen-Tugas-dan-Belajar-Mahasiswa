@@ -20,6 +20,8 @@ class PersonalTaskController extends Controller
 {
     public function index(Request $request): View
     {
+        $this->authorize('viewAnyPersonal', Tugas::class);
+
         $student = $request->user()->mahasiswa;
         abort_if($student === null, 404);
 
@@ -54,11 +56,15 @@ class PersonalTaskController extends Controller
 
     public function create(Request $request): View
     {
+        $this->authorize('createPersonal', Tugas::class);
+
         return view('pages.mahasiswa.tasks.create', $this->formData($request));
     }
 
     public function store(StorePersonalTaskRequest $request, PersonalTaskService $service): RedirectResponse
     {
+        $this->authorize('createPersonal', Tugas::class);
+
         $task = $service->create($request->user()->mahasiswa, $request->validated());
 
         return redirect()
@@ -68,14 +74,18 @@ class PersonalTaskController extends Controller
 
     public function show(Request $request, Tugas $task): View
     {
+        $task = $this->ownedTask($request, $task);
+        abort_unless($request->user()->can('viewPersonal', $task), 404);
+
         return view('pages.mahasiswa.tasks.show', [
-            'task' => $this->ownedTask($request, $task)->load(['prioritas', 'statusTugas', 'mataKuliah']),
+            'task' => $task->load(['prioritas', 'statusTugas', 'mataKuliah']),
         ]);
     }
 
     public function edit(Request $request, Tugas $task): View
     {
         $task = $this->ownedTask($request, $task);
+        abort_unless($request->user()->can('viewPersonal', $task), 404);
 
         return view('pages.mahasiswa.tasks.edit', [
             ...$this->formData($request),
@@ -86,6 +96,7 @@ class PersonalTaskController extends Controller
     public function update(UpdatePersonalTaskRequest $request, Tugas $task, PersonalTaskService $service): RedirectResponse
     {
         $task = $this->ownedTask($request, $task);
+        abort_unless($request->user()->can('updatePersonal', $task), 404);
 
         $service->update($task, $request->validated());
 
@@ -97,6 +108,7 @@ class PersonalTaskController extends Controller
     public function archive(Request $request, Tugas $task, PersonalTaskService $service): RedirectResponse
     {
         $task = $this->ownedTask($request, $task);
+        abort_unless($request->user()->can('archivePersonal', $task), 404);
 
         $service->archive($task);
 
@@ -107,6 +119,8 @@ class PersonalTaskController extends Controller
 
     public function history(Request $request): View
     {
+        $this->authorize('viewAnyPersonal', Tugas::class);
+
         $student = $request->user()->mahasiswa;
         abort_if($student === null, 404);
 

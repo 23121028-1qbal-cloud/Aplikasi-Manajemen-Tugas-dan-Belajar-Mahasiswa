@@ -18,12 +18,17 @@ class EnrollmentController extends Controller
 {
     public function index(): View
     {
+        $this->authorize('manage', Enrollment::class);
+
         return view('pages.admin.enrollments.index', [
             'enrollments' => Enrollment::query()
                 ->with(['mahasiswa', 'mataKuliah'])
                 ->orderByDesc('created_at')
                 ->paginate(10),
-            'students' => Mahasiswa::query()->orderBy('nama_lengkap')->get(),
+            'students' => Mahasiswa::query()
+                ->where('is_archived', false)
+                ->orderBy('nama_lengkap')
+                ->get(),
             'courses' => MataKuliah::query()
                 ->with('guruDosen')
                 ->where('is_archived', false)
@@ -35,6 +40,8 @@ class EnrollmentController extends Controller
 
     public function store(StoreEnrollmentRequest $request, EnrollmentService $service): RedirectResponse
     {
+        $this->authorize('manage', Enrollment::class);
+
         $result = $service->enroll($request->validated());
 
         $message = $result['reactivated']
@@ -48,6 +55,8 @@ class EnrollmentController extends Controller
 
     public function update(UpdateEnrollmentStatusRequest $request, Enrollment $enrollment, EnrollmentService $service): RedirectResponse
     {
+        $this->authorize('manage', Enrollment::class);
+
         $status = $request->enum('status', EnrollmentStatus::class);
 
         $service->changeStatus($enrollment, $status);

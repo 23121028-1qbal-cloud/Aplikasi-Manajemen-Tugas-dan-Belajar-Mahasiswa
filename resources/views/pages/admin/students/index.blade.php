@@ -38,7 +38,9 @@
                             <td>{{ $student->npm }}</td>
                             <td>{{ $student->user?->username }}</td>
                             <td>
-                                @if ($student->user?->is_active)
+                                @if ($student->is_archived)
+                                    <span class="badge text-bg-dark">Diarsipkan</span>
+                                @elseif ($student->user?->is_active)
                                     <span class="badge text-bg-success">Aktif</span>
                                 @else
                                     <span class="badge text-bg-secondary">Nonaktif</span>

@@ -17,6 +17,8 @@ class StudyActivityController extends Controller
 {
     public function index(Request $request): View
     {
+        $this->authorize('viewAny', AktivitasBelajar::class);
+
         $student = $request->user()->mahasiswa;
         abort_if($student === null, 404);
 
@@ -40,11 +42,15 @@ class StudyActivityController extends Controller
 
     public function create(Request $request): View
     {
+        $this->authorize('create', AktivitasBelajar::class);
+
         return view('pages.mahasiswa.study.create', $this->formData($request));
     }
 
     public function store(StoreStudyActivityRequest $request, StudyActivityService $service): RedirectResponse
     {
+        $this->authorize('create', AktivitasBelajar::class);
+
         $activity = $service->create($request->user()->mahasiswa, $request->validated());
 
         return redirect()
@@ -54,14 +60,18 @@ class StudyActivityController extends Controller
 
     public function show(Request $request, AktivitasBelajar $activity): View
     {
+        $activity = $this->ownedActivity($request, $activity);
+        abort_unless($request->user()->can('view', $activity), 404);
+
         return view('pages.mahasiswa.study.show', [
-            'activity' => $this->ownedActivity($request, $activity)->load(['statusBelajar', 'mataKuliah']),
+            'activity' => $activity->load(['statusBelajar', 'mataKuliah']),
         ]);
     }
 
     public function edit(Request $request, AktivitasBelajar $activity): View
     {
         $activity = $this->ownedActivity($request, $activity);
+        abort_unless($request->user()->can('update', $activity), 404);
 
         return view('pages.mahasiswa.study.edit', [
             ...$this->formData($request),
@@ -72,6 +82,7 @@ class StudyActivityController extends Controller
     public function update(UpdateStudyActivityRequest $request, AktivitasBelajar $activity, StudyActivityService $service): RedirectResponse
     {
         $activity = $this->ownedActivity($request, $activity);
+        abort_unless($request->user()->can('update', $activity), 404);
 
         $service->update($activity, $request->validated());
 
@@ -83,6 +94,7 @@ class StudyActivityController extends Controller
     public function archive(Request $request, AktivitasBelajar $activity, StudyActivityService $service): RedirectResponse
     {
         $activity = $this->ownedActivity($request, $activity);
+        abort_unless($request->user()->can('archive', $activity), 404);
 
         $service->archive($activity);
 
@@ -93,6 +105,8 @@ class StudyActivityController extends Controller
 
     public function history(Request $request): View
     {
+        $this->authorize('viewAny', AktivitasBelajar::class);
+
         $student = $request->user()->mahasiswa;
         abort_if($student === null, 404);
 

@@ -57,26 +57,36 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('mahasiswa.academic-tasks.progress.update', $task) }}" style="max-width: 420px;">
-            @csrf
-            @method('PATCH')
-            <input type="hidden" name="row_version" value="{{ old('row_version', $progress->row_version) }}">
-
-            <div class="mb-3">
-                <label for="id_status" class="form-label">Status Progres</label>
-                <select id="id_status" name="id_status" class="form-select @error('id_status') is-invalid @enderror" required>
-                    @foreach ($statuses as $status)
-                        <option value="{{ $status->id_status }}" @selected(old('id_status', $progress->id_status) == $status->id_status)>
-                            {{ $status->nama_status }}
-                        </option>
-                    @endforeach
-                </select>
-                @error('id_status')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
+        @if ($task->is_archived)
+            <div class="alert alert-secondary mb-0" role="status">
+                Tugas ini telah diarsipkan. Progres terkunci untuk semua pengguna.
             </div>
+        @elseif ($task->is_closed)
+            <div class="alert alert-warning mb-0" role="status">
+                Tugas ini telah ditutup. Progres mahasiswa tidak dapat diubah; hubungi dosen jika perlu koreksi.
+            </div>
+        @else
+            <form method="POST" action="{{ route('mahasiswa.academic-tasks.progress.update', $task) }}" style="max-width: 420px;">
+                @csrf
+                @method('PATCH')
+                <input type="hidden" name="row_version" value="{{ old('row_version', $progress->row_version) }}">
 
-            <button type="submit" class="btn btn-primary">Simpan Progres</button>
-        </form>
+                <div class="mb-3">
+                    <label for="id_status" class="form-label">Status Progres</label>
+                    <select id="id_status" name="id_status" class="form-select @error('id_status') is-invalid @enderror" required>
+                        @foreach ($statuses as $status)
+                            <option value="{{ $status->id_status }}" @selected(old('id_status', $progress->id_status) == $status->id_status)>
+                                {{ $status->nama_status }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('id_status')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <button type="submit" class="btn btn-primary">Simpan Progres</button>
+            </form>
+        @endif
     </div>
 @endsection

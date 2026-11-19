@@ -7,6 +7,7 @@ use App\Enums\TaskType;
 use App\Models\Enrollment;
 use App\Models\GuruDosen;
 use App\Models\MataKuliah;
+use App\Models\Prioritas;
 use App\Models\ProgresTugasAkademik;
 use App\Models\StatusTugas;
 use App\Models\Tugas;
@@ -17,6 +18,8 @@ use Illuminate\Validation\ValidationException;
 
 class AcademicTaskService
 {
+    public function __construct(private readonly NotificationService $notifications) {}
+
     private const EDITABLE = [
         'id_prioritas',
         'judul_tugas',
@@ -55,8 +58,17 @@ class AcademicTaskService
                 ]);
             }
 
+            $priorityId = $data['id_prioritas'] ?? Prioritas::query()
+                ->where('nama_prioritas', 'Sedang')
+                ->value('id_prioritas');
+
+            if ($priorityId === null) {
+                throw new \RuntimeException('Prioritas default Sedang tidak tersedia.');
+            }
+
             $task = Tugas::create([
                 ...Arr::only($data, self::EDITABLE),
+                'id_prioritas' => $priorityId,
                 'id_mata_kuliah' => $course->id_mata_kuliah,
                 'id_status' => null,
                 'id_user' => $lecturer->id_user,
@@ -139,6 +151,10 @@ class AcademicTaskService
                 return 0;
             }
 
+            if ($lockedEnrollment->mahasiswa?->is_archived) {
+                return 0;
+            }
+
             $course = MataKuliah::query()
                 ->whereKey($lockedEnrollment->id_mata_kuliah)
                 ->lockForUpdate()
@@ -188,6 +204,20 @@ class AcademicTaskService
                 ]);
             }
 
+            $task = $locked->tugas;
+
+            if ($task === null || $task->is_archived) {
+                throw ValidationException::withMessages([
+                    'id_status' => 'Progres tugas yang diarsipkan terkunci.',
+                ]);
+            }
+
+            if ($task->is_closed && $actor->hasRole('mahasiswa')) {
+                throw ValidationException::withMessages([
+                    'id_status' => 'Tugas akademik sudah ditutup. Progres mahasiswa tidak dapat diubah.',
+                ]);
+            }
+
             if (! StatusTugas::query()->whereKey($statusId)->exists()) {
                 throw ValidationException::withMessages([
                     'id_status' => 'Status tugas tidak valid.',
@@ -210,6 +240,7 @@ class AcademicTaskService
         $studentIds = Enrollment::query()
             ->where('id_mata_kuliah', $task->id_mata_kuliah)
             ->where('status', EnrollmentStatus::Terdaftar)
+            ->whereHas('mahasiswa', fn ($query) => $query->where('is_archived', false))
             ->orderBy('id_mahasiswa')
             ->pluck('id_mahasiswa')
             ->all();
@@ -262,6 +293,12 @@ class AcademicTaskService
             'updated_at' => $now,
         ], $missing);
 
-        return ProgresTugasAkademik::query()->insertOrIgnore($rows);
+        $inserted = ProgresTugasAkademik::query()->insertOrIgnore($rows);
+
+        if ($inserted > 0) {
+            $this->notifications->notifyAcademicTaskAssigned($task, $missing);
+        }
+
+        return $inserted;
     }
 }

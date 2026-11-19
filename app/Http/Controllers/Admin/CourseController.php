@@ -15,18 +15,25 @@ class CourseController extends Controller
 {
     public function index(): View
     {
+        $this->authorize('manage', MataKuliah::class);
+
         return view('pages.admin.courses.index', [
             'courses' => MataKuliah::query()
                 ->with('guruDosen')
                 ->withCount('enrollments')
                 ->orderBy('kode_mata_kuliah')
                 ->paginate(10),
-            'lecturers' => GuruDosen::query()->orderBy('nama_lengkap')->get(),
+            'lecturers' => GuruDosen::query()
+                ->where('is_archived', false)
+                ->orderBy('nama_lengkap')
+                ->get(),
         ]);
     }
 
     public function store(StoreCourseRequest $request): RedirectResponse
     {
+        $this->authorize('manage', MataKuliah::class);
+
         MataKuliah::create($request->validated());
 
         return redirect()
@@ -36,14 +43,23 @@ class CourseController extends Controller
 
     public function edit(MataKuliah $course): View
     {
+        $this->authorize('update', $course);
+
         return view('pages.admin.courses.edit', [
             'course' => $course->load('guruDosen'),
-            'lecturers' => GuruDosen::query()->orderBy('nama_lengkap')->get(),
+            'lecturers' => GuruDosen::query()
+                ->where(fn ($query) => $query
+                    ->where('is_archived', false)
+                    ->orWhere('id_guru_dosen', $course->guru_dosen_id))
+                ->orderBy('nama_lengkap')
+                ->get(),
         ]);
     }
 
     public function update(UpdateCourseRequest $request, MataKuliah $course, CourseService $service): RedirectResponse
     {
+        $this->authorize('update', $course);
+
         $service->update($course, $request->validated());
 
         return redirect()
@@ -53,6 +69,8 @@ class CourseController extends Controller
 
     public function archive(MataKuliah $course): RedirectResponse
     {
+        $this->authorize('archive', $course);
+
         if ($course->is_archived) {
             return redirect()
                 ->route('admin.courses.index')

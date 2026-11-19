@@ -3,7 +3,7 @@
 | Metadata | Value |
 |---|---|
 | Document ID | DOC-03 |
-| Version | 1.1.0 |
+| Version | 1.2.0 |
 | Status | Draft |
 | Platform | Responsive Web |
 | UI framework | Laravel Blade + Bootstrap |
@@ -126,10 +126,10 @@ Dokumen ini menetapkan struktur navigasi, inventaris halaman, alur, dan perilaku
 |---|---|---|
 | AD-01 | Admin Dashboard | Ringkasan administrasi |
 | AD-02 | Student Account List | Cari/lihat akun mahasiswa |
-| AD-03 | Student Account Detail | Kelola atribut/status yang diizinkan |
-| AD-04 | Lecturer Account List | Cari/lihat akun dosen |
+| AD-03 | Student Account Detail | Kelola atribut/status yang diizinkan; arsip/restore |
+| AD-04 | Lecturer Account List | Cari/lihat akun dosen, termasuk filter arsip |
 | AD-05 | Create Lecturer Account | Buat akun Guru/Dosen |
-| AD-06 | Lecturer Account Detail | Kelola atribut/status yang diizinkan |
+| AD-06 | Lecturer Account Detail | Kelola atribut/status yang diizinkan; arsip/restore dengan cek mata kuliah aktif |
 | AD-07 | Course Administration | Kelola data mata kuliah |
 | AD-08 | Enrollment List | Daftar enrollment |
 | AD-09 | Create/Edit Enrollment | Kelola enrollment |
@@ -161,6 +161,8 @@ Dokumen ini menetapkan struktur navigasi, inventaris halaman, alur, dan perilaku
 - Badge Tugas Akademik.
 - Definisi tugas (judul, instruksi, mata kuliah, deadline) read-only bagi mahasiswa.
 - Area progres terpisah dan hanya untuk mahasiswa yang sedang login.
+- Jika tugas ditutup, kontrol progres mahasiswa dinonaktifkan dan alasan ditampilkan; dosen tetap melihat aksi koreksi.
+- Jika tugas diarsipkan, seluruh kontrol progres dinonaktifkan.
 - Dosen melihat monitoring berdasarkan mata kuliah yang diampu.
 - Admin melihat tampilan monitoring read-only tanpa tombol mutasi.
 
@@ -181,6 +183,16 @@ Dokumen ini menetapkan struktur navigasi, inventaris halaman, alur, dan perilaku
 - Notification list hanya berisi notifikasi pengguna saat ini.
 - Mark as read memperbarui state server.
 - Notifikasi duplikat tidak ditampilkan sebagai event baru.
+- Tipe yang tampil: penugasan tugas akademik, deadline tugas akademik H-1, dan pengingat aktivitas belajar 60 menit sebelum mulai.
+- Tidak ada halaman preferensi notifikasi pada MVP; pengguna aktif menerima semua tipe yang berlaku.
+- Empty state menjelaskan bahwa belum ada notifikasi, bukan menampilkan error.
+
+### 6.8 Archive and restore account
+- Admin membuka detail akun dan memilih Arsipkan atau Pulihkan.
+- Aksi arsip memakai dialog konfirmasi yang menjelaskan bahwa akun tidak dapat login dan data historis tetap disimpan.
+- Untuk dosen, tombol Arsipkan dijelaskan akan ditolak bila masih ada mata kuliah non-arsip.
+- Setelah arsip, halaman detail menampilkan label `Diarsipkan` dan aksi Pulihkan.
+- Restore tidak menampilkan janji pemulihan progres yang terlewat; UI menyatakan bahwa distribusi baru berlaku setelah restore.
 
 ## 7. Forms and validation UX
 
@@ -228,7 +240,6 @@ Angka di atas adalah test viewport representatif, bukan dukungan terhadap perang
 - Final brand identity/logo.
 - Exact typography and color tokens.
 - Sidebar collapse behavior.
-- Final dashboard metrics.
-- Notification lead-time and preferences.
+- Final dashboard metrics per role.
 - Whether study calendar is included in MVP.
 - Exact table pagination size and default sorting.

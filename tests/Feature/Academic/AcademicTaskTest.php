@@ -468,4 +468,118 @@ class AcademicTaskTest extends TestCase
             ->get(route('mahasiswa.academic-tasks.show', $task))
             ->assertNotFound();
     }
+
+    public function test_priority_defaults_to_sedang_when_omitted(): void
+    {
+        $lecturer = GuruDosen::factory()->create();
+        $course = $this->courseFor($lecturer);
+        $student = Mahasiswa::factory()->create();
+        $this->enroll($student, $course);
+
+        $this->actingAs($lecturer->user)
+            ->post(route('lecturer.academic-tasks.store'), [
+                'id_mata_kuliah' => $course->id_mata_kuliah,
+                'judul_tugas' => 'Tugas Tanpa Prioritas',
+                'deskripsi' => 'Gunakan default.',
+                'deadline' => now()->addDays(5)->format('Y-m-d H:i:s'),
+            ])
+            ->assertRedirect();
+
+        $task = Tugas::query()->where('judul_tugas', 'Tugas Tanpa Prioritas')->firstOrFail();
+
+        $this->assertSame('Sedang', $task->prioritas?->nama_prioritas);
+    }
+
+    public function test_archived_student_is_excluded_from_progress_distribution(): void
+    {
+        $lecturer = GuruDosen::factory()->create();
+        $course = $this->courseFor($lecturer);
+        $student = Mahasiswa::factory()->create(['is_archived' => true, 'tanggal_arsip' => now()]);
+        $enrollment = $this->enroll($student, $course);
+        $task = $this->academicTask($course, $lecturer);
+
+        app(AcademicTaskService::class)->distributeForEnrollment($enrollment);
+
+        $this->assertSame(0, $task->progres()->count());
+    }
+
+    public function test_closed_task_blocks_student_but_allows_lecturer_correction(): void
+    {
+        $lecturer = GuruDosen::factory()->create();
+        $course = $this->courseFor($lecturer);
+        $student = Mahasiswa::factory()->create();
+        $this->enroll($student, $course);
+        $task = $this->academicTask($course, $lecturer);
+        $service = app(AcademicTaskService::class);
+        $service->distributeForEnrollment($student->enrollments()->firstOrFail());
+        $progress = $task->progres()->firstOrFail();
+        $service->close($task);
+
+        $this->actingAs($student->user)
+            ->patch(route('mahasiswa.academic-tasks.progress.update', $task), [
+                'id_status' => $this->statusId('Selesai'),
+                'row_version' => $progress->row_version,
+            ])
+            ->assertForbidden();
+
+        $this->assertSame($this->statusId('Belum Dikerjakan'), $progress->fresh()->id_status);
+
+        $this->actingAs($lecturer->user)
+            ->patch(route('lecturer.progress.update', $progress), [
+                'id_status' => $this->statusId('Selesai'),
+                'row_version' => $progress->row_version,
+            ])
+            ->assertRedirect(route('lecturer.academic-tasks.progress', $task));
+
+        $this->assertSame($this->statusId('Selesai'), $progress->fresh()->id_status);
+    }
+
+    public function test_archived_task_locks_student_progress_and_lecturer_management(): void
+    {
+        $lecturer = GuruDosen::factory()->create();
+        $course = $this->courseFor($lecturer);
+        $student = Mahasiswa::factory()->create();
+        $this->enroll($student, $course);
+        $task = $this->academicTask($course, $lecturer);
+        app(AcademicTaskService::class)->distributeForEnrollment($student->enrollments()->firstOrFail());
+        $progress = $task->progres()->firstOrFail();
+
+        $task->forceFill(['is_archived' => true, 'tanggal_arsip' => now()])->save();
+
+        $this->actingAs($student->user)
+            ->get(route('mahasiswa.academic-tasks.show', $task))
+            ->assertOk()
+            ->assertSee('telah diarsipkan', false);
+
+        $this->actingAs($student->user)
+            ->patch(route('mahasiswa.academic-tasks.progress.update', $task), [
+                'id_status' => $this->statusId('Selesai'),
+                'row_version' => $progress->row_version,
+            ])
+            ->assertForbidden();
+
+        $this->actingAs($lecturer->user)
+            ->get(route('lecturer.academic-tasks.show', $task))
+            ->assertNotFound();
+
+        $this->assertSame($this->statusId('Belum Dikerjakan'), $progress->fresh()->id_status);
+    }
+
+    public function test_lecturer_course_progress_recap_is_scoped_to_assigned_course(): void
+    {
+        $lecturer = GuruDosen::factory()->create();
+        $other = GuruDosen::factory()->create();
+        $course = $this->courseFor($lecturer);
+        $task = $this->academicTask($course, $lecturer, ['judul_tugas' => 'Tugas Rekap']);
+
+        $this->actingAs($lecturer->user)
+            ->get(route('lecturer.courses.progress', $course))
+            ->assertOk()
+            ->assertSee('Rekap Progres')
+            ->assertSee('Tugas Rekap');
+
+        $this->actingAs($other->user)
+            ->get(route('lecturer.courses.progress', $course))
+            ->assertNotFound();
+    }
 }

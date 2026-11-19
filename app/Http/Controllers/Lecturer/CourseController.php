@@ -31,12 +31,7 @@ class CourseController extends Controller
 
     public function show(Request $request, MataKuliah $course): View
     {
-        $lecturer = $request->user()->guruDosen;
-
-        abort_unless(
-            $lecturer !== null && $course->guru_dosen_id === $lecturer->id_guru_dosen,
-            404
-        );
+        abort_unless($request->user()->can('view', $course), 404);
 
         return view('pages.lecturer.courses.show', [
             'course' => $course->load('guruDosen')->loadCount('enrollments'),
@@ -50,14 +45,34 @@ class CourseController extends Controller
         ]);
     }
 
+    public function progress(Request $request, MataKuliah $course): View
+    {
+        abort_unless($request->user()->can('view', $course), 404);
+
+        $tasks = Tugas::query()
+            ->academic()
+            ->where('id_mata_kuliah', $course->id_mata_kuliah)
+            ->with('prioritas')
+            ->withCount([
+                'progres',
+                'progres as selesai_count' => fn ($query) => $query->whereHas(
+                    'statusTugas',
+                    fn ($status) => $status->where('nama_status', 'Selesai')
+                ),
+            ])
+            ->orderByDesc('created_at')
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('pages.lecturer.courses.progress', [
+            'course' => $course->load('guruDosen'),
+            'tasks' => $tasks,
+        ]);
+    }
+
     public function update(UpdateAssignedCourseRequest $request, MataKuliah $course, CourseService $service): RedirectResponse
     {
-        $lecturer = $request->user()->guruDosen;
-
-        abort_unless(
-            $lecturer !== null && $course->guru_dosen_id === $lecturer->id_guru_dosen,
-            404
-        );
+        abort_unless($request->user()->can('update', $course), 404);
 
         $service->update($course, $request->validated());
 

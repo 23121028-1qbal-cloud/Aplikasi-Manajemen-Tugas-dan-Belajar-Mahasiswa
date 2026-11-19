@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\AppearanceController;
 use App\Http\Controllers\Admin\AcademicMonitoringController;
 use App\Http\Controllers\Admin\CourseController as AdminCourseController;
 use App\Http\Controllers\Admin\EnrollmentController as AdminEnrollmentController;
@@ -11,6 +12,7 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Lecturer\AcademicTaskController as LecturerAcademicTaskController;
 use App\Http\Controllers\Lecturer\CourseController as LecturerCourseController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Student\AcademicTaskController as StudentAcademicTaskController;
 use App\Http\Controllers\Student\CourseController as StudentCourseController;
 use App\Http\Controllers\Student\PersonalTaskController;
@@ -30,9 +32,15 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
 
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::patch('/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
+    Route::patch('/notifications/{notification}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
+
     Route::get('/account', [AccountController::class, 'show'])->name('account.show');
     Route::get('/account/password', [AccountController::class, 'editPassword'])->name('account.password.edit');
     Route::put('/account/password', [AccountController::class, 'updatePassword'])->name('account.password.update');
+    Route::get('/account/appearance', [AppearanceController::class, 'edit'])->name('account.appearance.edit');
+    Route::patch('/account/appearance', [AppearanceController::class, 'update'])->name('account.appearance.update');
 
     Route::middleware('role:mahasiswa')->group(function () {
         Route::get('/mahasiswa/dashboard', [DashboardController::class, 'show'])->name('mahasiswa.dashboard');
@@ -67,6 +75,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/guru-dosen/dashboard', [DashboardController::class, 'show'])->name('lecturer.dashboard');
         Route::get('/guru-dosen/courses', [LecturerCourseController::class, 'index'])->name('lecturer.courses.index');
         Route::get('/guru-dosen/courses/{course}', [LecturerCourseController::class, 'show'])->name('lecturer.courses.show');
+        Route::get('/guru-dosen/courses/{course}/progress', [LecturerCourseController::class, 'progress'])->name('lecturer.courses.progress');
         Route::put('/guru-dosen/courses/{course}', [LecturerCourseController::class, 'update'])->name('lecturer.courses.update');
 
         Route::get('/guru-dosen/academic-tasks', [LecturerAcademicTaskController::class, 'index'])
@@ -96,6 +105,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/admin/students/{student}', [StudentAccountController::class, 'show'])->name('admin.students.show');
         Route::put('/admin/students/{student}', [StudentAccountController::class, 'update'])->name('admin.students.update');
         Route::patch('/admin/students/{student}/status', [StudentAccountController::class, 'updateStatus'])->name('admin.students.status');
+        Route::patch('/admin/students/{student}/archive', [StudentAccountController::class, 'archive'])->name('admin.students.archive');
+        Route::patch('/admin/students/{student}/restore', [StudentAccountController::class, 'restore'])->name('admin.students.restore');
         Route::post('/admin/students/{student}/temporary-password', [StudentAccountController::class, 'temporaryPassword'])
             ->name('admin.students.temporary-password');
 
@@ -118,6 +129,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/admin/lecturers', [LecturerAccountController::class, 'store'])->name('admin.lecturers.store');
         Route::get('/admin/lecturers/{lecturer}', [LecturerAccountController::class, 'show'])->name('admin.lecturers.show');
         Route::put('/admin/lecturers/{lecturer}', [LecturerAccountController::class, 'update'])->name('admin.lecturers.update');
+        Route::patch('/admin/lecturers/{lecturer}/archive', [LecturerAccountController::class, 'archive'])->name('admin.lecturers.archive');
+        Route::patch('/admin/lecturers/{lecturer}/restore', [LecturerAccountController::class, 'restore'])->name('admin.lecturers.restore');
         Route::post('/admin/lecturers/{lecturer}/temporary-password', [LecturerAccountController::class, 'resetTemporaryPassword'])
             ->name('admin.lecturers.temporary-password');
     });

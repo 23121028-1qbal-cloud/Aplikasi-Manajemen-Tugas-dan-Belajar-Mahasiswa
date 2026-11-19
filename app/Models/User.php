@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\Role;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
@@ -45,6 +46,11 @@ class User extends Authenticatable
     public function guruDosen(): HasOne
     {
         return $this->hasOne(GuruDosen::class, 'id_user', 'id_user');
+    }
+
+    public function notifikasi(): HasMany
+    {
+        return $this->hasMany(Notifikasi::class, 'id_user', 'id_user');
     }
 
     public function hasRole(Role|string ...$roles): bool

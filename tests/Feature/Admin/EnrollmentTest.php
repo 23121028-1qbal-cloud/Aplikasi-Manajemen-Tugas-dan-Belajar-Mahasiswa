@@ -125,6 +125,37 @@ class EnrollmentTest extends TestCase
         $this->assertDatabaseCount('mahasiswa_mata_kuliah', 0);
     }
 
+    public function test_archived_student_rejects_new_enrollment(): void
+    {
+        $student = Mahasiswa::factory()->create(['is_archived' => true, 'tanggal_arsip' => now()]);
+        $course = MataKuliah::factory()->create();
+
+        $this->actingAs($this->admin())
+            ->post('/admin/enrollments', $this->payload($student, $course))
+            ->assertSessionHasErrors('id_mahasiswa');
+
+        $this->assertDatabaseCount('mahasiswa_mata_kuliah', 0);
+    }
+
+    public function test_ditolak_enrollment_cannot_be_reactivated(): void
+    {
+        $student = Mahasiswa::factory()->create();
+        $course = MataKuliah::factory()->create();
+        $enrollment = Enrollment::factory()->create([
+            'id_mahasiswa' => $student->id_mahasiswa,
+            'id_mata_kuliah' => $course->id_mata_kuliah,
+            'tahun_akademik' => '2026/2027',
+            'semester' => Semester::Ganjil,
+            'status' => EnrollmentStatus::Ditolak,
+        ]);
+
+        $this->actingAs($this->admin())
+            ->post('/admin/enrollments', $this->payload($student, $course))
+            ->assertSessionHasErrors('id_mata_kuliah');
+
+        $this->assertSame(EnrollmentStatus::Ditolak, $enrollment->fresh()->status);
+    }
+
     public function test_invalid_academic_year_format_is_rejected(): void
     {
         $student = Mahasiswa::factory()->create();

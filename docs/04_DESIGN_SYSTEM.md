@@ -3,7 +3,7 @@
 | Metadata | Value |
 |---|---|
 | Document ID | DOC-04 |
-| Version | 1.2.0 |
+| Version | 1.3.0 |
 | Status | Draft / values mostly Proposed |
 | Platform | Web |
 | CSS framework | Bootstrap |
@@ -29,7 +29,7 @@ Menetapkan aturan visual konsisten untuk seluruh halaman web. Design System tida
 - Gunakan Bootstrap utilities dan components sebelum menulis CSS khusus.
 - CSS custom hanya untuk kebutuhan yang tidak tercakup Bootstrap.
 - Jangan menambahkan framework frontend terpisah.
-- Bootstrap major/minor version: `TBD` dan harus dikunci sebelum implementasi.
+- Bootstrap major/minor version: **5.3** (`USER-DECIDED`, REC-15).
 
 ## 4. Color tokens
 
@@ -148,7 +148,7 @@ Implementation recommendation:
 - Root `data-theme="light|dark"` attribute.
 - Persist user preference server-side if a user-preference field is approved; otherwise use a clearly defined session/cookie approach.
 - Theme switch must not modify application data or permissions.
-- Theme preference persistence mechanism: `TBD`.
+- Theme preference persistence mechanism: cookie `theme` + atribut `data-theme` (`USER-DECIDED`, REC-10, 2026-11-18). Penyimpanan per akun di database tetap `TBD` dan tidak diimplementasikan.
 - Implementasi awal Phase 2 (`USER-DECIDED`, REC-10, 2026-11-18): preferensi disimpan pada cookie `theme` dan diterapkan melalui `data-theme` di elemen `<html>` oleh layout server-rendered. Pendekatan ini tidak menambah kolom database dan tidak mengubah izin; bila kelak disetujui penyimpanan per akun, cookie tetap menjadi fallback untuk pengunjung.
 
 ## 11. Accessibility
@@ -180,9 +180,7 @@ Final asset pipeline depends on Laravel version and build tooling selected durin
 
 - Final palette and brand accent.
 - Final font family.
-- Bootstrap version (`USER-DECIDED`: 5.3).
-- Icon library (`USER-DECIDED`: Bootstrap Icons).
-- Theme preference persistence.
+- Theme preference per akun di database (cookie tetap menjadi implementasi saat ini).
 - Formal accessibility conformance target.
 
 Status implementasi Phase 2 (2026-11-18): token warna pada §4 dan skala pada §5–§7 dipakai sebagai nilai `PROPOSED` di `resources/css/tokens.css`. Perubahan nilai tidak memerlukan perubahan komponen karena seluruh komponen memakai custom property.

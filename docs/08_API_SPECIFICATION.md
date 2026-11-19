@@ -3,7 +3,7 @@
 | Metadata | Value |
 |---|---|
 | Document ID | DOC-08 |
-| Version | 1.5.0 |
+| Version | 1.7.0 |
 | Status | Draft |
 | Primary interface | Laravel Web Routes |
 | JSON API | Only when a specific UI/integration need exists |
@@ -47,8 +47,8 @@ The previous mobile-oriented REST API contract is not the primary contract for t
 | GET | `/notifications` | `notifications.index` | Own notifications |
 | PATCH | `/notifications/{notification}/read` | `notifications.read` | Mark own notification read |
 | PATCH | `/notifications/read-all` | `notifications.read-all` | Mark own notifications read |
-| GET | `/account/appearance` | `account.appearance.edit` | **PROPOSED** (REC-10): appearance settings page |
-| PATCH | `/account/appearance` | `account.appearance.update` | **PROPOSED** (REC-10): persist Light/Dark preference |
+| GET | `/account/appearance` | `account.appearance.edit` | Appearance settings page (REC-10, `USER-DECIDED`) |
+| PATCH | `/account/appearance` | `account.appearance.update` | Persist Light/Dark preference (REC-10, `USER-DECIDED`) |
 
 ### 3.3 Mahasiswa routes
 | Method | URI | Name | Action |
@@ -65,9 +65,9 @@ The previous mobile-oriented REST API contract is not the primary contract for t
 | PATCH | `/mahasiswa/academic-tasks/{task}/progress` | `mahasiswa.academic-tasks.progress.update` | Update own progress |
 | GET | `/mahasiswa/task-history` | `mahasiswa.task-history` | Completed/archived history |
 | GET | `/mahasiswa/study-activities` | `mahasiswa.study-activities.index` | List |
-| GET | `/mahasiswa/study-history` | `mahasiswa.study-history` | **PROPOSED** (REC-07): completed/archived study history |
-| GET | `/mahasiswa/study-activities/create` | `mahasiswa.study-activities.create` | **PROPOSED** (REC-07): create form |
-| GET | `/mahasiswa/study-activities/{activity}/edit` | `mahasiswa.study-activities.edit` | **PROPOSED** (REC-07): edit form |
+| GET | `/mahasiswa/study-history` | `mahasiswa.study-history` | Completed/archived study history (REC-07, `USER-DECIDED`) |
+| GET | `/mahasiswa/study-activities/create` | `mahasiswa.study-activities.create` | Create form (REC-07, `USER-DECIDED`) |
+| GET | `/mahasiswa/study-activities/{activity}/edit` | `mahasiswa.study-activities.edit` | Edit form (REC-07, `USER-DECIDED`) |
 | POST | `/mahasiswa/study-activities` | `mahasiswa.study-activities.store` | Create |
 | GET | `/mahasiswa/study-activities/{activity}` | `mahasiswa.study-activities.show` | Detail |
 | PUT | `/mahasiswa/study-activities/{activity}` | `mahasiswa.study-activities.update` | Update |
@@ -81,7 +81,7 @@ The previous mobile-oriented REST API contract is not the primary contract for t
 | GET | `/guru-dosen/dashboard` | `lecturer.dashboard` | Dashboard |
 | GET | `/guru-dosen/courses` | `lecturer.courses.index` | Assigned courses |
 | GET | `/guru-dosen/courses/{course}` | `lecturer.courses.show` | Course detail |
-| GET | `/guru-dosen/courses/{course}/progress` | `lecturer.courses.progress` | **PROPOSED** (REC-08): course progress overview (`GD-07`) |
+| GET | `/guru-dosen/courses/{course}/progress` | `lecturer.courses.progress` | Course progress overview (`GD-07`, REC-08, `USER-DECIDED`) |
 | PUT | `/guru-dosen/courses/{course}` | `lecturer.courses.update` | Update allowed course fields |
 | GET | `/guru-dosen/academic-tasks` | `lecturer.academic-tasks.index` | Task list |
 | GET | `/guru-dosen/academic-tasks/create` | `lecturer.academic-tasks.create` | Create form |
@@ -103,11 +103,15 @@ Course create and lecturer assignment permissions must follow the final approved
 | GET | `/admin/students/{student}` | `admin.students.show` | Student detail |
 | PUT | `/admin/students/{student}` | `admin.students.update` | Update allowed fields |
 | PATCH | `/admin/students/{student}/status` | `admin.students.status` | Activate/deactivate |
+| PATCH | `/admin/students/{student}/archive` | `admin.students.archive` | Soft-archive profile + deactivate account |
+| PATCH | `/admin/students/{student}/restore` | `admin.students.restore` | Restore profile + reactivate account |
 | POST | `/admin/students/{student}/temporary-password` | `admin.students.temporary-password` | Issue temporary password |
 | GET | `/admin/lecturers` | `admin.lecturers.index` | Lecturer list |
 | POST | `/admin/lecturers` | `admin.lecturers.store` | Create lecturer account/profile |
 | GET | `/admin/lecturers/{lecturer}` | `admin.lecturers.show` | Lecturer detail |
 | PUT | `/admin/lecturers/{lecturer}` | `admin.lecturers.update` | Update allowed fields |
+| PATCH | `/admin/lecturers/{lecturer}/archive` | `admin.lecturers.archive` | Soft-archive profile + deactivate account; blocked if assigned to a non-archived course |
+| PATCH | `/admin/lecturers/{lecturer}/restore` | `admin.lecturers.restore` | Restore profile + reactivate account |
 | POST | `/admin/lecturers/{lecturer}/temporary-password` | `admin.lecturers.temporary-password` | Issue temporary password (REC-09) |
 | GET | `/admin/courses` | `admin.courses.index` | Course list |
 | POST | `/admin/courses` | `admin.courses.store` | Create course |
@@ -124,6 +128,7 @@ Course create and lecturer assignment permissions must follow the final approved
 - All role-specific groups require authentication and role middleware.
 - Policies must verify resource ownership and relationship.
 - Student progress route must resolve progress by authenticated student, not trust submitted student ID.
+- Student progress mutation must be rejected when the task is closed or archived; lecturer correction is allowed after close but not after archive.
 - Lecturer progress correction must verify the task course belongs to the lecturer.
 - Admin monitoring must use dedicated read-only queries/resources.
 - Admin monitoring must never join/select personal task descriptions or study activity content.
@@ -147,7 +152,8 @@ Late enrollment:
 2. Find open, non-archived academic tasks for course.
 3. Insert missing progress rows only.
 4. Preserve existing progress.
-5. Commit transaction.
+5. Create one assignment notification per newly created progress, deduplicated; do not notify for progress that already existed.
+6. Commit transaction.
 
 ## 6. Error behavior
 
@@ -159,6 +165,10 @@ Late enrollment:
 | Missing resource | 404 |
 | Duplicate enrollment/progress | Resolve idempotently or show conflict; never duplicate |
 | Stale concurrent update | Conflict feedback; preserve safe form data |
+| Student updates progress after task closure | Denied with safe message; progress remains unchanged |
+| Progress update on archived task | Denied for all roles |
+| Archive lecturer with a non-archived course | Validation error; lecturer remains active |
+| Restore archived account | Account active again; no backfill of missed progress |
 | Unexpected error | Generic message; server-side diagnostic log |
 
 ## 7. JSON endpoints
@@ -181,12 +191,11 @@ Paginate large account, course, enrollment, task, and progress listings. Exact p
 
 ## 9. Open API decisions
 
-- Final course create/assignment authority.
-- 403 versus 404 policy for inaccessible records.
 - Exact form field names and validation lengths.
 - Pagination defaults and sort rules.
 - Whether any async JSON route is actually required.
-- Temporary password reveal/expiry workflow.
+
+Sudah ditutup: kewenangan course (Admin membuat/menugaskan; dosen hanya mengubah nama), 403/404 (REC-12), temporary password reveal/expiry (`PRD-TBD-016`), route arsip/restore (`PRD-TBD-025`), dan route preferensi notifikasi ditunda karena preferensi per pengguna tidak termasuk MVP (`PRD-TBD-018`).
 
 ## 10. Rekonsiliasi route (2026-11-18)
 
@@ -200,7 +209,7 @@ Audit UI/UX terhadap dokumen route menemukan halaman tanpa route dan route tanpa
 | REC-10 | `SH-04` Appearance Settings tidak memiliki route; persistensi tema `TBD` | Route GET/PATCH `/account/appearance`; persistensi awal memakai cookie + atribut `data-theme` tanpa mengubah schema |
 | REC-11 | Field akun yang boleh diubah Admin belum ditetapkan | Hanya `nama_lengkap`; `role`, `password`, `username`, `npm`, `nip_guru`, dan `id` tidak diterima |
 
-Aturan keamanan tidak berubah: seluruh route di atas tetap memerlukan session, CSRF pada mutasi, policy resource, dan scoping query di server.
+Aturan keamanan tidak berubah: seluruh route di atas tetap memerlukan session, CSRF pada mutasi, **Policy/Gate resource** (`ARCH-011`), dan scoping query di server.
 
 Status route:
 
@@ -216,3 +225,8 @@ Status route:
 | `PATCH /mahasiswa/academic-tasks/{task}/progress` (`mahasiswa.academic-tasks.progress.update`) | Diimplementasikan; progres sendiri + `row_version` |
 | `PATCH /guru-dosen/progress/{progress}` (`lecturer.progress.update`) | Diimplementasikan; koreksi dalam mata kuliah yang diampu + `row_version`, aktor dicatat |
 | `GET /admin/academic-monitoring` dan `/tasks/{task}` | Diimplementasikan read-only; tidak menyentuh tugas personal/aktivitas belajar |
+| `GET/PATCH /account/appearance` (`account.appearance.*`) | Diimplementasikan; preferensi Light/Dark disimpan pada cookie `theme`, tanpa schema tambahan |
+| `GET /guru-dosen/courses/{course}/progress` (`lecturer.courses.progress`) | Diimplementasikan; rekap per tugas dalam mata kuliah yang diampu (REC-08/GD-07) |
+| `GET /notifications`, `PATCH /notifications/{notification}/read`, `PATCH /notifications/read-all` | Diimplementasikan; scoped ke penerima, read/read-all idempotent, dan badge unread di header |
+| `PATCH /admin/students/{student}/archive` dan `/restore` | Diimplementasikan; arsip menonaktifkan akun, restore mengaktifkan kembali tanpa backfill progres |
+| `PATCH /admin/lecturers/{lecturer}/archive` dan `/restore` | Diimplementasikan; dosen harus bebas mata kuliah non-arsip |

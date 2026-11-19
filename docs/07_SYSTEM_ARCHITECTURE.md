@@ -3,7 +3,7 @@
 | Metadata | Value |
 |---|---|
 | Document ID | DOC-07 |
-| Version | 1.1.0 |
+| Version | 1.3.0 |
 | Status | Draft |
 | Architecture | Laravel Full-Stack Monolith |
 | Deployment | One OCI VM |
@@ -26,6 +26,8 @@ Defines the web application's logical architecture, component responsibilities, 
 | ARCH-008 | One OCI VM for Nginx, Laravel, MySQL | USER-DECIDED |
 | ARCH-009 | Bootstrap | USER-DECIDED |
 | ARCH-010 | Laravel Scheduler for in-app reminder jobs | USER-DECIDED |
+| ARCH-011 | Policy/Gate layer wajib untuk otorisasi resource | USER-DECIDED (2026-11-19) |
+| ARCH-012 | Arsip/restore akun memakai soft archive + nonaktifkan/aktifkan akun | USER-DECIDED (2026-11-19) |
 
 ## 3. High-level architecture
 
@@ -65,7 +67,7 @@ Proposed logical layers:
 
 Do not create layers that add ceremony without clear value. Repository pattern is optional, not mandatory.
 
-Proposed folders:
+Folders (Policy/Gate wajib, `ARCH-011`):
 
 ```text
 app/
@@ -117,14 +119,22 @@ tests/
 - Invalidate session and regenerate CSRF token on logout.
 - Deactivated user cannot establish a new session.
 - Sensitive operations require current authenticated state and authorization.
-- Admin-issued temporary password workflow is required; expiry/forced rotation details are TBD.
+- Admin-issued temporary password workflow is required; temporary password berlaku 72 jam, wajib diganti pada login pertama, dan route selain ubah password/logout diblokir sampai diganti (`PRD-TBD-016`).
 - Admin bootstrap via controlled deployment/Artisan process; never public registration.
 
 Sanctum personal access tokens, bearer tokens, Android Keystore, and per-device token lifecycle are not part of this architecture.
 
 ## 7. Authorization
 
-Use role middleware for coarse access and policies for resource-level access. Check ownership and relationship on every request. Never rely on navigation visibility.
+Use role middleware for coarse access and **Policy/Gate classes for resource-level access**. Check ownership and relationship on every request. Never rely on navigation visibility. Policy/Gate wajib (`ARCH-011`, `USER-DECIDED` 2026-11-19); role middleware dan query scoping tetap diperlukan, tetapi bukan pengganti Policy.
+
+Policy minimum yang harus tersedia:
+- `TugasPolicy`: personal owner actions; academic definition actions untuk dosen pengampu; read-only academic task untuk mahasiswa yang memiliki progres.
+- `ProgresTugasAkademikPolicy`: mahasiswa hanya progres sendiri; dosen hanya koreksi pada mata kuliah yang diampu; tolak update setelah close/arsip sesuai `PRD-TBD-021`.
+- `MataKuliahPolicy`: dosen hanya mata kuliah yang diampu; Admin sesuai kewenangan administrasi.
+- `EnrollmentPolicy`: Admin create/update status; mahasiswa hanya melihat enrollment sendiri.
+- `MahasiswaPolicy` dan `GuruDosenPolicy`: Admin mengelola akun; arsip/restore hanya Admin; dosen tidak dapat mengarsipkan diri sendiri.
+- `AktivitasBelajarPolicy`: hanya pemilik mahasiswa; Dosen/Admin tidak memiliki akses konten.
 
 Examples:
 - Student task query is scoped to authenticated student.
@@ -162,13 +172,15 @@ Network failure should show a clear error and allow safe retry. Non-idempotent o
 ## 10. Notifications and scheduler
 
 - Persist notification rows in MySQL.
-- Laravel Scheduler runs reminder/distribution maintenance jobs at configured intervals.
+- Laravel Scheduler runs every 15 minutes in `Asia/Jakarta` display context; timestamps disimpan UTC (REC-13).
+- Triggers MVP: academic task distribution, academic task deadline H-1, dan study activity 60 menit sebelum `waktu_mulai` (`PRD-TBD-018`).
 - Scheduled job must be safe to run more than once.
-- Use unique deduplication keys.
+- Use unique deduplication key `(id_user, dedup_key)`.
+- Retensi 90 hari melalui cleanup job; hapus notifikasi lebih lama dari 90 hari.
 - Scheduler should log completion/failure and expose operational status.
 - Use a database transaction for notification creation.
 - Email and browser push are out of scope for MVP.
-- Exact lead time and timezone policy remain TBD.
+- Tidak ada preferensi notifikasi per pengguna pada MVP; hanya pengguna aktif dan non-arsip yang menerima notifikasi.
 
 ## 11. Concurrency and integrity
 
@@ -229,9 +241,10 @@ No Android client, Room, WorkManager, offline-first sync, REST-only backend sepa
 
 ## 15. Open architecture decisions
 
-- Exact Laravel/PHP/MySQL/Nginx/Ubuntu versions.
+- Exact Nginx/Ubuntu versions; Laravel 12.x, PHP 8.4, MySQL 8.4, dan Bootstrap 5.3 sudah `USER-DECIDED` (REC-15).
 - Whether queue worker is required.
-- Session lifetime and storage driver.
+- Session lifetime and storage driver (`PRD-TBD-019`).
+- Tooling monitoring scheduler dan alert kegagalan job.
 - Backup destination and retention.
 - OCI region and final VM shape.
 - Final concurrency matrix.

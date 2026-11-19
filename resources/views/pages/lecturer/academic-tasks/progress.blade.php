@@ -11,10 +11,16 @@
         <a href="{{ route('lecturer.academic-tasks.show', $task) }}" class="btn btn-sm btn-outline-secondary">Kembali</a>
     </div>
 
-    @if ($errors->has('row_version'))
+    @if ($errors->has('row_version') || $errors->has('id_status'))
         <div class="alert alert-warning" role="alert">
-            {{ $errors->first('row_version') }}
+            {{ $errors->first('row_version') ?: $errors->first('id_status') }}
             <a href="{{ route('lecturer.academic-tasks.progress', $task) }}" class="alert-link">Muat versi terbaru</a>.
+        </div>
+    @endif
+
+    @if ($task->is_closed)
+        <div class="alert alert-secondary" role="status">
+            Tugas sudah ditutup. Mahasiswa tidak dapat mengubah progres, tetapi dosen masih dapat melakukan koreksi.
         </div>
     @endif
 

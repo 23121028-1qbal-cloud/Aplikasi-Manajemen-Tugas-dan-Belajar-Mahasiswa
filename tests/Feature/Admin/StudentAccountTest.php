@@ -116,6 +116,49 @@ class StudentAccountTest extends TestCase
         $this->assertTrue(Hash::check($temporaryPassword, $student->user->fresh()->password));
     }
 
+    public function test_admin_can_archive_and_restore_student(): void
+    {
+        $student = Mahasiswa::factory()->create();
+
+        $this->actingAs($this->admin())
+            ->patch(route('admin.students.archive', $student))
+            ->assertRedirect(route('admin.students.show', $student));
+
+        $student->refresh();
+
+        $this->assertTrue($student->is_archived);
+        $this->assertNotNull($student->tanggal_arsip);
+        $this->assertFalse($student->user->fresh()->is_active);
+
+        $this->actingAs($this->admin())
+            ->patch(route('admin.students.status', $student), ['is_active' => '1'])
+            ->assertSessionHasErrors('is_active');
+
+        $this->assertFalse($student->user->fresh()->is_active);
+
+        $this->actingAs($this->admin())
+            ->patch(route('admin.students.restore', $student))
+            ->assertRedirect(route('admin.students.show', $student));
+
+        $student->refresh();
+
+        $this->assertFalse($student->is_archived);
+        $this->assertNull($student->tanggal_arsip);
+        $this->assertTrue($student->user->fresh()->is_active);
+    }
+
+    public function test_non_admin_cannot_archive_student(): void
+    {
+        $student = Mahasiswa::factory()->create();
+        $otherStudent = Mahasiswa::factory()->create();
+
+        $this->actingAs($student->user)
+            ->patch(route('admin.students.archive', $otherStudent))
+            ->assertForbidden();
+
+        $this->assertFalse($otherStudent->fresh()->is_archived);
+    }
+
     public function test_non_admin_cannot_manage_student_accounts(): void
     {
         $student = Mahasiswa::factory()->create();

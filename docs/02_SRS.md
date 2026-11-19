@@ -3,7 +3,7 @@
 | Metadata | Value |
 |---|---|
 | Document ID | DOC-02 |
-| Version | 1.3.0 |
+| Version | 1.5.0 |
 | Status | Draft |
 | Target | Laravel Blade Web Application |
 | Parent | `01_PRD.md` |
@@ -47,6 +47,7 @@ The system is a server-rendered Laravel Full-Stack application. Browser requests
 | SRS-AUTH-012 | Public registration shall not allow a user to select Admin or Guru/Dosen role. | MUST |
 | SRS-AUTH-013 | Deactivated accounts shall not be allowed to establish a new authenticated session. | MUST |
 | SRS-AUTH-014 | The application shall provide a password-change workflow for authenticated users, and shall force a temporary password to be changed on first login. | MUST |
+| SRS-AUTH-015 | Resource-level authorization shall be implemented through Laravel Policy/Gate classes in addition to role middleware and server-side query scoping. | MUST |
 
 ### 4.2 Personal tasks
 
@@ -87,6 +88,7 @@ The system is a server-rendered Laravel Full-Stack application. Browser requests
 | SRS-ACAD-016 | Leaving a course shall not delete existing progress history. | MUST |
 | SRS-ACAD-017 | Progress updates shall not modify academic task definition fields. | MUST |
 | SRS-ACAD-018 | Only the three approved task statuses shall be offered. | MUST |
+| SRS-ACAD-019 | After an academic task is closed, a student shall not update its progress; an assigned lecturer may still correct it with actor audit. An archived academic task shall be locked for all roles. | MUST |
 
 ### 4.4 Study activities
 
@@ -129,17 +131,22 @@ The system is a server-rendered Laravel Full-Stack application. Browser requests
 | SRS-NOTIF-004 | Laravel Scheduler shall execute configured reminder jobs. | MUST |
 | SRS-NOTIF-005 | Notification creation shall use a deduplication key scoped per recipient, so one event may notify many recipients without collision. | MUST |
 | SRS-NOTIF-006 | Email and browser push shall not be required for MVP. | MUST |
-| SRS-NOTIF-007 | Reminder lead times and preferences shall follow approved configuration. | TBD |
+| SRS-NOTIF-007 | Notifications shall be generated for academic task distribution, academic task deadline H-1, and study activity 60 minutes before start, using `Asia/Jakarta` display time. | MUST |
+| SRS-NOTIF-008 | Notifications older than 90 days shall be removed by a scheduled cleanup job. | MUST |
+| SRS-NOTIF-009 | No per-user notification preferences shall be required in MVP. | MUST |
+| SRS-NOTIF-010 | Notifications shall be sent only to active, non-archived users. | MUST |
 
 ### 4.7 Archive and history
 
 | ID | Requirement | Priority |
 |---|---|---|
-| SRS-ARCH-001 | Task, course, student, and study activity archive shall use soft archive where defined. | MUST |
+| SRS-ARCH-001 | Task, course, student, lecturer, and study activity archive shall use soft archive where defined. | MUST |
 | SRS-ARCH-002 | Archive shall preserve related progress and history. | MUST |
 | SRS-ARCH-003 | Hard deletion shall be blocked where it would erase required history or violate restrictive FK rules. | MUST |
 | SRS-ARCH-004 | Archived courses shall not receive new academic task distribution. | MUST |
 | SRS-ARCH-005 | Archived students shall not receive new distribution. | MUST |
+| SRS-ARCH-006 | Archiving a student or lecturer shall deactivate the account; restoring shall reactivate it without backfilling missed academic progress. | MUST |
+| SRS-ARCH-007 | A lecturer shall not be archived while assigned to a non-archived course. | MUST |
 
 ## 5. Non-functional requirements
 
@@ -230,17 +237,15 @@ Concurrency strategy shall be selected per entity and operation:
 
 ## 10. Open requirements
 
-- Session lifetime and concurrent session policy.
-- Temporary password expiry and mandatory change.
-- Notification timing, preferences, timezone, and retention.
-- Post-closure progress edit policy.
+- Session lifetime and concurrent session policy (`PRD-TBD-019`).
 - Exact browser support floor.
-- Performance and availability thresholds.
-- 403 vs 404 resource disclosure policy.
+- Performance and availability thresholds (`PRD-TBD-020`).
 - Final concurrency rules by table.
-- Personal task deadline nullability (`PRD-TBD-024`, decided: required).
+- Personal task ownership transfer policy (`PRD-TBD-017`).
 
-## 12. Keputusan 2026-11-18
+Sudah ditutup dan tidak lagi menjadi open requirement: temporary password 72 jam + wajib ganti (`PRD-TBD-016`), 403/404 disclosure policy (REC-12), deadline wajib (`PRD-TBD-024`), notifikasi (`PRD-TBD-018`), progres pasca-close (`PRD-TBD-021`), dan arsip/restore akun (`PRD-TBD-025`).
+
+## 11. Keputusan 2026-11-18
 
 | ID | Keputusan |
 |---|---|
@@ -248,19 +253,29 @@ Concurrency strategy shall be selected per entity and operation:
 | REC-11 / PRD-TBD-023 | Admin hanya dapat mengubah `nama_lengkap`; `username`, `npm`, `nip_guru` immutable; status akun lewat aksi terpisah. |
 | PRD-TBD-016 | Temporary password berlaku 72 jam, wajib diganti pada login pertama, route lain diblokir sampai diganti, dan penerbitan ulang mereset expiry. |
 
-## 11. Rekonsiliasi dokumentasi (2026-11-18)
+## 12. Keputusan 2026-11-19
 
-Rekonsiliasi disetujui pemilik proyek pada 2026-11-18. Seluruh butir REC-01 s.d. REC-15 berstatus `USER-DECIDED`; REC-04 dan REC-11 disetujui pada revisi 1.3.0 dengan aturan pada §12.
+| ID | Requirement terdampak | Keputusan |
+|---|---|---|
+| PRD-TBD-018 | SRS-NOTIF-007 s.d. SRS-NOTIF-010 | Trigger: distribusi tugas akademik, deadline akademik H-1, aktivitas belajar 60 menit sebelum mulai. Retensi 90 hari; scheduler 15 menit; tanpa preferensi; hanya pengguna aktif. |
+| PRD-TBD-021 | SRS-ACAD-019 | Setelah close: mahasiswa terkunci, dosen pengampu boleh koreksi dengan audit; arsip mengunci semua. |
+| PRD-TBD-025 | SRS-ARCH-005/006/007 | Arsip + restore; arsip menonaktifkan akun; dosen hanya dapat diarsipkan tanpa mata kuliah non-arsip; restore tidak membackfill progres. |
+| ARCH-011 | SRS-AUTH-015 | Policy/Gate layer wajib untuk otorisasi resource. |
+
+## 13. Rekonsiliasi dokumentasi (2026-11-18)
+
+Rekonsiliasi disetujui pemilik proyek pada 2026-11-18. Seluruh butir REC-01 s.d. REC-15 berstatus `USER-DECIDED`; REC-04 dan REC-11 disetujui pada revisi 1.3.0 dengan aturan pada §11.
 
 | ID | Requirement terdampak | Catatan |
 |---|---|---|
 | REC-01 | SRS-NOTIF-005 | Cakupan dedup adalah per penerima: unique `(id_user, dedup_key)` atau key yang memuat recipient. |
-| REC-02 | SRS-TASK-*, SRS-STUDY-009 | Konvensi ownership data personal diseragamkan ke profil `mahasiswa`, bukan akun `users`. Menunggu keputusan CP2. |
+| REC-02 | SRS-TASK-*, SRS-STUDY-009 | Konvensi ownership data personal diseragamkan ke profil `mahasiswa`, bukan akun `users`. `USER-DECIDED` 2026-11-18 dan sudah diimplementasikan pada `aktivitas_belajar.id_mahasiswa`; audit DDL final tetap pada CP2. |
 | REC-04 | SRS-ENR-004/006 | Status awal `Terdaftar`; transisi `Dibatalkan`/`Selesai` dari `Terdaftar`; reaktivasi periode sama; `Ditolak` tidak dipakai. |
 | REC-11 | SRS-AUTH-009 | Admin hanya mengubah `nama_lengkap`; identifier tetap immutable. |
 | REC-07 | — | Tambahan route create/edit aktivitas belajar (celah UI `ST-08`). |
 | REC-08 | SRS-ACAD-011 | Tambahan route rekap progres per mata kuliah (celah UI `GD-07`). |
 | REC-09 | SRS-AUTH-010 | Temporary password juga mencakup akun Guru/Dosen. |
-| REC-12 | SRS-AUTH-007, §8 | Usulan: 404 untuk resource milik pengguna lain, 403 untuk penolakan tingkat role. |
-| REC-13 | §6 | Usulan: simpan timestamp UTC, tampilkan dengan timezone aplikasi (`Asia/Jakarta`). |
-| REC-14 | SRS-TASK-* | Usulan: `deadline` wajib untuk tugas personal dan akademik sampai diputuskan lain. |
+| REC-12 | SRS-AUTH-007, §8 | `USER-DECIDED` 2026-11-18: 404 untuk resource milik pengguna lain, 403 untuk penolakan tingkat role. |
+| Policy layer | SRS-AUTH-015 | `USER-DECIDED` 2026-11-19: Policy/Gate wajib untuk otorisasi resource; role middleware dan query scoping tetap diperlukan, bukan pengganti Policy. |
+| REC-13 | §6 | `USER-DECIDED` 2026-11-18: simpan timestamp UTC, tampilkan dengan timezone aplikasi (`Asia/Jakarta`). |
+| REC-14 | SRS-TASK-* | `USER-DECIDED` 2026-11-18: `deadline` wajib untuk tugas personal dan akademik. |

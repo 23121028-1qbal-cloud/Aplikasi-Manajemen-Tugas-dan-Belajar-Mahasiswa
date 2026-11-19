@@ -69,7 +69,10 @@
     <div class="app-card p-4 mt-3">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
             <h3 class="h6 mb-0">Tugas Akademik</h3>
-            <a href="{{ route('lecturer.academic-tasks.create') }}" class="btn btn-sm btn-primary">Buat Tugas</a>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{{ route('lecturer.courses.progress', $course) }}" class="btn btn-sm btn-outline-secondary">Rekap Progres</a>
+                <a href="{{ route('lecturer.academic-tasks.create') }}" class="btn btn-sm btn-primary">Buat Tugas</a>
+            </div>
         </div>
 
         @if ($tasks->isEmpty())

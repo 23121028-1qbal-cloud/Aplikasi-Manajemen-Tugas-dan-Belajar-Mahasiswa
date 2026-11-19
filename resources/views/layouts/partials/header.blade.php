@@ -1,4 +1,7 @@
-@php($user = auth()->user())
+@php
+    $user = auth()->user();
+    $unreadNotifications = $user?->notifikasi()->unread()->count() ?? 0;
+@endphp
 <header class="app-header d-flex align-items-center gap-2 px-3 px-lg-4 sticky-top">
     <button type="button"
             class="app-icon-button d-lg-none"
@@ -23,8 +26,16 @@
     </button>
 
     @if (Route::has('notifications.index'))
-        <a href="{{ route('notifications.index') }}" class="app-icon-button" aria-label="Notifikasi">
+        <a href="{{ route('notifications.index') }}"
+           class="app-icon-button position-relative"
+           aria-label="Notifikasi{{ $unreadNotifications > 0 ? ', '.$unreadNotifications.' belum dibaca' : '' }}"
+           title="Notifikasi">
             <i class="bi bi-bell" aria-hidden="true"></i>
+            @if ($unreadNotifications > 0)
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill text-bg-danger">
+                    <span aria-hidden="true">{{ $unreadNotifications > 99 ? '99+' : $unreadNotifications }}</span>
+                </span>
+            @endif
         </a>
     @endif
 
