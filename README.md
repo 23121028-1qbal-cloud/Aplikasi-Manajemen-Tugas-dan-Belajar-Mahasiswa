@@ -146,21 +146,4 @@ php artisan test
 npm run build
 ```
 
-## Riwayat versi dokumentasi
 
-| Versi | Tanggal | Status | Ringkasan |
-|---|---|---|---|
-| 1.0.0 | 2026-11-14 s.d. 2026-11-16 | Draft historis | Baseline dokumen berorientasi Android + Laravel API. |
-| 1.1.0 | 2026-11-17 | Draft migrasi web | Mengganti target menjadi Web Application, Laravel Blade, session auth, online-first, Bootstrap, Web Routes, dan deployment satu VM OCI. |
-| 1.1.1 | 2026-11-18 | Draft + rekonsiliasi | Menambahkan catatan rekonsiliasi `PROPOSED` (REC-01 s.d. REC-15), open decision baru (PRD-TBD-022 s.d. 024), dan status pelaksanaan Phase 0/2. Tidak mengubah keputusan baseline. |
-| 1.2.0 | 2026-11-18 | Draft + keputusan | Menyetujui REC-01/02/03/05/06/07/08/09/10/12/13/14/15 dan PRD-TBD-024. REC-04, REC-11, dan PRD-TBD-016 tetap OPEN. |
-| 1.3.0 | 2026-11-18 | Draft + keputusan | Menyetujui REC-04 (transisi enrollment), REC-11 (`nama_lengkap` saja), dan PRD-TBD-016 (temporary password 72 jam + wajib ganti). |
-| 1.4.0 | 2026-11-18 | Draft + keputusan | Menambahkan optimistic locking `row_version` pada tugas, aktivitas belajar, dan mata kuliah, serta kewenangan dosen mengubah nama mata kuliah yang diampu. |
-| 1.5.0 | 2026-11-19 | Implementasi Phase 6 | Menambahkan tugas akademik, distribusi progres idempotent, pembaruan progres mahasiswa, koreksi dosen, monitoring Admin read-only, dan `row_version` pada progres akademik. |
-| 1.6.0 | 2026-11-19 | Rekonsiliasi dokumen | Menyelaraskan status keputusan yang sudah disetujui, mencatat kewajiban Policy/Gate layer, dan menandai gap implementasi Phase 7. |
-| 1.7.0 | 2026-11-19 | Penutupan keputusan | Menyetujui arsip/restore, cakupan notifikasi MVP, progres pasca-close, dan kewajiban Policy/Gate layer. |
-| 1.8.0 | 2026-11-19 | Gap closure | Mengimplementasikan Policy/Gate, arsip/restore, post-close lock, appearance, GD-07, dashboard per role, default prioritas, dan guard reaktivasi `Ditolak`; 122 test lulus. |
-| 1.9.0 | 2026-11-19 | Phase 7 | Menambahkan notifikasi in-app, trigger distribusi/deadline/aktivitas belajar, dedup `(id_user, dedup_key)`, scheduler 15 menit, cleanup 90 hari, inbox, dan badge; 132 test lulus pada SQLite dan MySQL 8.4.13. |
-| 1.10.0 | 2026-11-19 | Phase 8 | Poles UI: kontras Light/Dark, tabel dan tombol outline, label input disabled, filter mobile, perbaikan overflow halaman progres, bug `orWhereKey` pada form edit mata kuliah, serta eager-load `mataKuliah` di dashboard. Audit axe per halaman 0 violation; smoke test Chromium dan Firefox lulus; 134 test lulus. |
-
-Dokumen-dokumen ini belum merupakan bukti bahwa aplikasi telah diimplementasikan atau dideploy.
